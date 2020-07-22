@@ -1,0 +1,3 @@
+[submodule "report_files_repository"]
+	path = report_files_repository
+	url = git@github.com:joaovitor3/test-github-files.git

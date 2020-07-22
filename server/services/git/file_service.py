@@ -1,5 +1,16 @@
 import yaml
 import os
+from flask import current_app
+
+
+class FileServiceError(Exception):
+    """
+    Custom Exception to notify callers an error occurred when handling wiki
+    """
+
+    def __init__(self, message):
+        if current_app:
+            current_app.logger.error(message)
 
 
 class FileService:
@@ -23,10 +34,11 @@ class FileService:
             f.write(file_content)
             f.close()
         except FileExistsError:
-            raise ValueError(
+            raise FileServiceError(
                 f"Unable to write {filename} in {file_path}. File already exists"
             )
 
+    @staticmethod
     def update_file(file_content: str, file_path: str, filename: str) -> None:
         """
         Update an existing file
@@ -44,7 +56,7 @@ class FileService:
             f.write(file_content)
             f.close()
         except FileNotFoundError:
-            raise ValueError(f"Unable to open {filename} located in {file_path}")
+            raise FileServiceError(f"Unable to open {filename} located in {file_path}")
 
     @staticmethod
     def get_content(file_path):
@@ -66,7 +78,7 @@ class FileService:
             f.close()
             return file_content
         except FileNotFoundError:
-            raise ValueError(f"Unable to open file located in {file_path}")
+            raise FileServiceError(f"Unable to open file located in {file_path}")
 
     @staticmethod
     def dict_to_yaml(yaml_dict: dict) -> str:

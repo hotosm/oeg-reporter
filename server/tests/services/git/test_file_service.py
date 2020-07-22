@@ -1,5 +1,5 @@
 from server.tests.base_test_config import BaseTestCase
-from server.services.git.file_service import FileService
+from server.services.git.file_service import FileService, FileServiceError
 from unittest.mock import patch, mock_open
 import os
 
@@ -31,7 +31,7 @@ class TestFileService(BaseTestCase):
         open_mock.side_effect = FileNotFoundError
 
         with patch("server.services.git.file_service.open", open_mock):
-            with self.assertRaises(ValueError):
+            with self.assertRaises(FileServiceError):
                 FileService.get_content(self.filename)
 
     def test_update_file(self):
@@ -48,7 +48,7 @@ class TestFileService(BaseTestCase):
         open_mock.side_effect = FileNotFoundError
 
         with patch("server.services.git.file_service.open", open_mock):
-            with self.assertRaises(ValueError):
+            with self.assertRaises(FileServiceError):
                 FileService.update_file(
                     self.file_content, self.file_path, self.filename
                 )
@@ -58,7 +58,7 @@ class TestFileService(BaseTestCase):
         open_mock.side_effect = FileExistsError
 
         with patch("server.services.git.file_service.open", open_mock):
-            with self.assertRaises(ValueError):
+            with self.assertRaises(FileServiceError):
                 FileService.create_file(
                     self.file_content, self.file_path, self.filename
                 )

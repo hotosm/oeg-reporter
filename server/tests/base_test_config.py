@@ -1,5 +1,6 @@
 from unittest import TestCase
 from server import create_app
+import logging
 
 
 class BaseTestCase(TestCase):
@@ -9,3 +10,4 @@ class BaseTestCase(TestCase):
         self.app_context = self.app.test_request_context()
         self.app_context.push()
         self.client = self.app.test_client()
+        logging.disable(logging.CRITICAL)

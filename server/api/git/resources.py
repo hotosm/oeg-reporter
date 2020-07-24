@@ -18,9 +18,16 @@ class GitDocumentApi(MethodView):
 
             git_report = GitService(platform_name, organisation_name, project_id)
             git_report.create_document(document)
-            return {"Success": f"Document for project {project_id} created"}, 201
+            return {"detail": f"Document for project {project_id} created"}, 201
         except FileServiceError as e:
             return {"Error": f"{str(e)}"}, 409
 
-    def patch(self):
-        return {"msg": "success"}, 201
+    def patch(self, platform_name: str, organisation_name: str, project_id: int):
+        try:
+            document_schema = DocumentSchema(partial=True)
+            document = document_schema.load(request.json)
+            git_report = GitService(platform_name, organisation_name, project_id)
+            git_report.update_document(document_schema.dump(document))
+            return {"detail": f"Document for project {project_id} updated"}, 201
+        except FileServiceError as e:
+            return {"Error": f"{str(e)}"}, 409

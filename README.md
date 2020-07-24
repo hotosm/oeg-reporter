@@ -1,29 +1,11 @@
 # OEG Reporter
 
-Repository for report content from Tasking Manager to OpenStreetMap 
+The OEG Reporter reports data from Tasking Manager (TM) to OpenStreetMap (OSM) following the standards defined by [Organized Editing Guidelines](https://wiki.osmfoundation.org/wiki/Organised_Editing_Guidelines) (OEG). It outputs the information required by the OEG to git repository and the OSM wiki. Below is a very simple representation of how this is implemented
 
-## Build
+[<img src="./docs/imgs/communication_diagram.png" />](./docs/imgs/communication_diagram.png)
 
-### Python dependencies
+## Get involved!
 
-* Create a Python Virtual Environment, using Python 3.7+:
-    * ```python3 -m venv ./venv```
-* Activate your virtual environment and install dependencies:
-    * Linux/Mac:
-        * ```. ./venv/bin/activate```
-        * ```pip install -r requirements.txt```
-* With your virtual environment activaded, execute the following command for running the server
-    * ```py
-      python runserver -d
-      ```
+* If You find a bug or have an idea of a new feature for the OEG Reporter you  can [open a new issue](https://github.com/hotosm/oeg-reporter/issues/new).
 
-## Running tests
-
-* For running the tests and see the test coverage run the command
-    * ```
-      coverage run --source=server -m unittest discover -s server/tests/
-      ```
-* For generate a html report with the test coverage run the command. After running this command a folder named htmlcov with the report will be generated in the root of the project
-    * ```
-      coverage html
-      ```
+* If you would like to enhance the code of the Export Tool web app, a guide to installing it in a local development environment is at [docs/setup-development.md](docs/setup-development.md).

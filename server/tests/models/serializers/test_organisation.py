@@ -1,9 +1,10 @@
+from marshmallow.exceptions import ValidationError
+
 from server.tests.base_test_config import BaseTestCase
 from server.models.serializers.organisation import (
     OrganisationSchema,
     OrganisationListSchema,
 )
-from marshmallow.exceptions import ValidationError
 
 
 class TestOrganisationSchema(BaseTestCase):

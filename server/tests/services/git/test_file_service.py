@@ -1,7 +1,8 @@
+import os
+from unittest.mock import patch, mock_open
+
 from server.tests.base_test_config import BaseTestCase
 from server.services.git.file_service import FileService, FileServiceError
-from unittest.mock import patch, mock_open
-import os
 
 
 class TestFileService(BaseTestCase):

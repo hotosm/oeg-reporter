@@ -1,6 +1,7 @@
 from unittest import TestCase
-from server import create_app
 import logging
+
+from server import create_app
 
 
 class BaseTestCase(TestCase):

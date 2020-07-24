@@ -1,6 +1,8 @@
-import yaml
 import os
+
 from flask import current_app
+
+import yaml
 
 
 class FileServiceError(Exception):
@@ -15,56 +17,56 @@ class FileServiceError(Exception):
 
 class FileService:
     @staticmethod
-    def create_file(file_content: str, file_path: str, filename: str) -> None:
+    def create_file(file_content: str, file_dir: str, filename: str) -> None:
         """
         Create a file
 
         Keyword arguments:
         file_content -- The contents of the updated file
-        file_path -- The directory of the file
+        file_dir -- The directory of the file
         filename -- The name of the file
 
         Raises:
         ValueError -- Raised when the file already exists
         """
         try:
-            if not os.path.exists(file_path):
-                os.makedirs(file_path)
-            f = open(f"{file_path}/{filename}", "x")
+            if not os.path.exists(file_dir):
+                os.makedirs(file_dir)
+            f = open(f"{file_dir}/{filename}", "x")
             f.write(file_content)
             f.close()
         except FileExistsError:
             raise FileServiceError(
-                f"Unable to write {filename} in {file_path}. File already exists"
+                f"Unable to write {filename} in {file_dir}. File already exists"
             )
 
     @staticmethod
-    def update_file(file_content: str, file_path: str, filename: str) -> None:
+    def update_file(file_content: str, file_dir: str, filename: str) -> None:
         """
         Update an existing file
 
         Keyword arguments:
         file_content -- The contents of the updated file
-        file_path -- The directory of the file
+        file_dir -- The directory of the file
         filename -- The name of the file
 
         Raises:
         ValueError -- Raised when the file doesn't exists
         """
         try:
-            f = open(f"{file_path}/{filename}", "w+")
+            f = open(f"{file_dir}/{filename}", "w+")
             f.write(file_content)
             f.close()
         except FileNotFoundError:
-            raise FileServiceError(f"Unable to open {filename} located in {file_path}")
+            raise FileServiceError(f"Unable to open {filename} located in {file_dir}")
 
     @staticmethod
-    def get_content(file_path):
+    def get_content(file_dir):
         """
         Get the content of a file and returns it as string
 
         Keyword arguments:
-        file_path -- The directory of the file
+        file_dir -- The directory of the file
 
         Raises:
         ValueError -- Raised when the file doesn't exists
@@ -73,12 +75,12 @@ class FileService:
         file_content -- The content of the file as string
         """
         try:
-            f = open(file_path, "r")
+            f = open(file_dir, "r")
             file_content = f.read()
             f.close()
             return file_content
         except FileNotFoundError:
-            raise FileServiceError(f"Unable to open file located in {file_path}")
+            raise FileServiceError(f"Unable to open file located in {file_dir}")
 
     @staticmethod
     def dict_to_yaml(yaml_dict: dict) -> str:

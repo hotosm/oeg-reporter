@@ -15,3 +15,6 @@ class EnvironmentConfig:
             f"{os.getenv('REPORT_FILE_DIR')}/",
         )
     )
+    WIKI_API_ENDPOINT = os.getenv("WIKI_API_ENDPOINT")
+    MEDIAWIKI_BOT_NAME = os.getenv("MEDIAWIKI_BOT_NAME")
+    MEDIAWIKI_BOT_PASSWORD = os.getenv("MEDIAWIKI_BOT_PASSWORD")

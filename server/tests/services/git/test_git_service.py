@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import copy
 
 from server.tests.base_test_config import BaseTestCase
 from server.services.git.git_service import GitService
@@ -199,7 +200,7 @@ class TestGitService(BaseTestCase):
 
         git_service.update_yaml_file(update_fields, self.yaml_str)
 
-        update_document = dict(self.document_data)
+        update_document = copy.deepcopy(self.document_data)
         update_document["organisation"]["name"] = update_organisation_name
         update_document["project"]["name"] = update_project_name
         update_document["project"]["externalSource"]["license"] = update_license

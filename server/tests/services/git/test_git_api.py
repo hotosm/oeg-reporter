@@ -26,7 +26,6 @@ class TestGitDocumentApi(BaseTestCase):
 
     @patch("server.services.git.file_service.FileService.create_file")
     def test_git_document_post(self, mocked_create_file, mocked_repo):
-        # explain
         response = self.client.post(
             url_for("create_git_document"), json=self.document_data
         )
@@ -37,7 +36,6 @@ class TestGitDocumentApi(BaseTestCase):
     def test_git_document_post_fail_with_existing_file(
         self, mocked_create_file, mocked_repo
     ):
-        # explain
         mocked_create_file.side_effect = FileServiceError(self.fail_post_message)
         response = self.client.post(
             url_for("create_git_document"), json=self.document_data
@@ -49,16 +47,14 @@ class TestGitDocumentApi(BaseTestCase):
     @patch("server.services.git.file_service.FileService.get_content")
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_git_document_patch(
         self, mocked_yaml_file, mocked_update_file, mocker_repo
     ):
-        # explain
         mocked_yaml_file.return_value = self.yaml_str
         update_fields = {"project": {"name": "project new name example"}}
 
-        # explain
         response = self.client.patch(
             url_for(
                 "update_git_document",
@@ -75,7 +71,6 @@ class TestGitDocumentApi(BaseTestCase):
     def test_git_document_patch_fail_withot_existing_file(
         self, mocked_get_content, mocked_repo
     ):
-        # explain
         mocked_get_content.side_effect = FileServiceError(self.fail_patch_message)
         response = self.client.patch(
             url_for(

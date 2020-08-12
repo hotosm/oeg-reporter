@@ -6,7 +6,7 @@
 * Copy the example configuration file to start your own configuration: `cp example.env .env`.
 * Adjust the `.env` configuration file to fit your configuration.
 * Make sure that you followed the setup for the [git repository configuration](/docs/git-repository-setup.md) and the [media wiki configuration](/docs/mediawiki-instance-setup.md) for properly set the variables in the `.env` configuration file:
-    - `REPORT_FILE_REPOSITORY_DIR`=report_files_repository
+    - `REPORT_FILE_DIR`=report_files_repository
     - `MEDIAWIKI_BOT_NAME`=bot_name
     - `MEDIAWIKI_BOT_PASSWORD`=bot_password
     - `WIKI_API_ENDPOINT`=https://your-wiki.org/api.php

@@ -30,7 +30,7 @@ class TestGitService(BaseTestCase):
     @patch("server.services.git.git_service.FileService.create_file")
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_create_document(self, mocked_create_file, mocked_repo):
         document_dir = (
@@ -88,7 +88,7 @@ class TestGitService(BaseTestCase):
     @patch("server.services.git.git_service.isfile")
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_get_staged_files(self, mocked_isfile, mocked_listdir, mocked_repo):
         git_service = GitService(
@@ -114,7 +114,7 @@ class TestGitService(BaseTestCase):
 
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_organisation_name_updated_dir(self, mocked_repo):
         git_service = GitService(
@@ -134,7 +134,7 @@ class TestGitService(BaseTestCase):
 
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_platform_name_updated_dir(self, mocked_repo):
         git_service = GitService(
@@ -154,7 +154,7 @@ class TestGitService(BaseTestCase):
 
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_platform_and_org_name_updated_dir(self, mocked_repo):
         git_service = GitService(
@@ -211,7 +211,7 @@ class TestGitService(BaseTestCase):
     @patch("server.services.git.git_service.GitService")
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_update_document_with_dir_update(
         self, mocked_git_service, mocked_file_service, mocked_repo
@@ -260,7 +260,7 @@ class TestGitService(BaseTestCase):
     @patch("server.services.git.git_service.GitService")
     @patch.dict(
         "server.services.git.git_service.current_app.config",
-        {"REPORT_FILE_REPOSITORY_DIR": "example"},
+        {"REPORT_FILE_DIR": "example"},
     )
     def test_update_document_without_dir_update(
         self, mocked_git_service, mocked_file_service, mocked_repo

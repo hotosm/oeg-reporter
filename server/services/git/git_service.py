@@ -16,9 +16,9 @@ class GitService:
         self.platform_name = platfotm_name.replace(" ", "_")
         self.organisation_name = organisation_name.replace(" ", "_")
         self.project_id = project_id
-        self.repo = git.Repo(current_app.config["REPORT_FILE_REPOSITORY_DIR"])
+        self.repo = git.Repo(current_app.config["REPORT_FILE_DIR"])
         self.document_dir = (
-            f'{current_app.config["REPORT_FILE_REPOSITORY_DIR"]}/'
+            f'{current_app.config["REPORT_FILE_DIR"]}/'
             f"{self.yaml_file_dir}/"
             f"{self.platform_name}/"
             f"{self.organisation_name}"
@@ -153,7 +153,7 @@ class GitService:
             )
 
             update_dir = (
-                f"{current_app.config['REPORT_FILE_REPOSITORY_DIR']}/"
+                f"{current_app.config['REPORT_FILE_DIR']}/"
                 f"{self.yaml_file_dir}/{platform_name}"
                 f"/{organisation_name}"
             )
@@ -167,7 +167,7 @@ class GitService:
                 " ", "_"
             )
             update_dir = (
-                f"{current_app.config['REPORT_FILE_REPOSITORY_DIR']}/"
+                f"{current_app.config['REPORT_FILE_DIR']}/"
                 f"{self.yaml_file_dir}/{self.platform_name}/"
                 f"{organisation_name}"
             )
@@ -179,7 +179,7 @@ class GitService:
         ):
             platform_name = update_document["platform"]["name"].replace(" ", "_")
             update_dir = (
-                f"{current_app.config['REPORT_FILE_REPOSITORY_DIR']}/"
+                f"{current_app.config['REPORT_FILE_DIR']}/"
                 f"{self.yaml_file_dir}/{platform_name}/"
                 f"{self.organisation_name}"
             )

@@ -20,7 +20,7 @@ class GitDocumentApi(MethodView):
             git_report.create_document(document)
             return {"detail": f"Document for project {project_id} created"}, 201
         except FileServiceError as e:
-            return {"Error": f"{str(e)}"}, 409
+            return {"detail": f"{str(e)}"}, 409
 
     def patch(self, platform_name: str, organisation_name: str, project_id: int):
         try:
@@ -30,4 +30,4 @@ class GitDocumentApi(MethodView):
             git_report.update_document(document_schema.dump(document))
             return {"detail": f"Document for project {project_id} updated"}, 201
         except FileServiceError as e:
-            return {"Error": f"{str(e)}"}, 409
+            return {"detail": f"{str(e)}"}, 409

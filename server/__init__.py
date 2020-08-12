@@ -37,7 +37,7 @@ def add_api_endpoints(app):
         methods=["POST"],
     )
     app.add_url_rule(
-        "/git//<string:platform_name>/" "<string:organisation_name>/<int:project_id>/",
+        "/git/<string:platform_name>/" "<string:organisation_name>/<int:project_id>/",
         view_func=GitDocumentApi.as_view("update_git_document"),
         methods=["PATCH"],
     )

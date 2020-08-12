@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 from server.models.serializers.document import DocumentSchema
+from server.services.wiki.mediawiki_service import MediaWikiService
+from server.services.wiki.wiki_section_service import WikiSectionService
 
 
 class PageService(ABC):
@@ -29,6 +31,64 @@ class PageService(ABC):
         # Generate page sections dictionary
         page_sections_data = self.generate_page_sections_dict(serialized_page_data)
         return page_sections_data
+
+    def wikitext_to_dict(self, page_title: str):
+        mediawiki = MediaWikiService()
+        text = mediawiki.get_page_text(page_title)
+
+        redirect_page = MediaWikiService().is_redirect_page(text)
+        if redirect_page:
+            raise ValueError(
+                f"Error getting text from the page '{page_title}'."
+                f" Page was moved from '{page_title}' to '{redirect_page}'"
+            )
+        else:
+            sections = WikiSectionService().get_sections(text)
+            page_sections_dict = self.generate_sections_dict(sections)
+            if not page_sections_dict:
+                raise ValueError(f"Error parsing page '{page_title}' to dict")
+            else:
+                return page_sections_dict
+
+    def generate_sections_dict(self, sections):
+        page_sections_dict = {}
+        for section in sections:
+            if section.title is not None:
+
+                try:
+                    parent_section_level = 2
+                    (
+                        start_index,
+                        end_index,
+                    ) = WikiSectionService().get_section_title_str_index(
+                        section, section.string, parent_section_level
+                    )
+                except ValueError:
+                    continue
+
+                parent_section_text = section.string[
+                    end_index : len(section.string)  # noqa
+                ]
+                children_sections = WikiSectionService().get_sections(
+                    parent_section_text
+                )
+                children_dict = {}
+                for child_section in children_sections:
+                    if child_section.title is not None:
+
+                        (
+                            child_start_index,
+                            child_end_index,
+                        ) = WikiSectionService().get_section_title_str_index(
+                            child_section,
+                            child_section.string,
+                            parent_section_level + 1,
+                        )
+                        children_dict[child_section.title] = child_section.string[
+                            child_end_index : len(child_section.string)  # noqa
+                        ]
+                        page_sections_dict[section.title] = children_dict
+        return page_sections_dict
 
     @abstractmethod
     def filter_page_data(self, document_data: dict) -> dict:

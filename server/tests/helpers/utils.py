@@ -12,7 +12,9 @@ document_data = {
         "changesetComment": "changeset comment example",
         "author": "project author example",
         "url": "http://example.com",
-        "created": datetime.strftime(datetime.now(), "%Y-%m-%dT%H:%M:%S.%fZ"),
+        "created": datetime.strftime(
+            datetime.strptime("01/01/2020", "%d/%m/%Y"), "%Y-%m-%dT%H:%M:%S.%fZ"
+        ),
         "externalSource": {
             "imagery": "imagery example",
             "license": "license example",
@@ -66,6 +68,22 @@ class OrganisationPageTemplates:
         "|-\n"
         "|}\n"
     )
+    page_dictionary = {
+        "Organisation": {
+            "Link": "\n[http://www.hotosm.org/ HOT]\n\n",
+            "Description": "HOT is an international "
+            "team dedicated to humanitarian "
+            "action and community development "
+            "through open mapping.",
+        },
+        "Platform": {"Link": "\n[http://www.tasks.hotosm.org/ HOT tasking manager]\n"},
+        "Projects": {
+            "Project list": "\n{|class='wikitable sortable'\n|-\n! scope=\"col\" | "
+            'Name\n! scope="col" | Platform\n! scope="col" | Project Manager or Team\n! scope="col" | '
+            "Status\n|-\n| [[project name example | project name example]]\n|"
+            " [http://www.tasks.hotosm.org/ HOT tasking manager]\n| project author example\n| status example\n|-\n|}"
+        },
+    }
 
 
 class ProjectPageTemplates:
@@ -87,7 +105,7 @@ class ProjectPageTemplates:
         "===List of Users===\n"
     )
     page_initial_section = "Project"
-    project_session = "Project"
+    project_section = "Project"
     short_description_section = "Short Description"
     timeframe_section = "Timeframe"
     created_date = "Start Date"
@@ -116,6 +134,29 @@ class ProjectPageTemplates:
         "|-\n"
         "|}\n"
     )
+    page_dictionary = {
+        "Project": {
+            "Short Description": "\nshort description example\n",
+            "Url": "\nhttp://example.com/projects/1\n",
+            "Hashtag": "\nchangeset comment example\n",
+            "Timeframe": "\n* '''Start Date:''' 01 January 2020\n",
+        },
+        "External Sources": {
+            "Instructions": "\ninstructions example\n\n",
+            "Per Task Instructions": "\nper task instructions example\n",
+            "Imagery": "\nimagery example\n",
+            "License": "\nlicense example\n",
+        },
+        "Team and User": {
+            "List of Users": (
+                '\n{|class="wikitable sortable"\n|-'
+                '\n! scope="col" | OSM ID\n'
+                '! scope="col" | Name\n'
+                "|-\n"
+                "|      1\n|      user name example\n|-\n|}"
+            )
+        },
+    }
 
 
 class OverviewPageTemplates:
@@ -140,3 +181,17 @@ class OverviewPageTemplates:
         "|-\n"
         "|}\n"
     )
+    page_dictionary = {
+        "Activities": {
+            "Activities list": (
+                "\n{|class='wikitable sortable'\n"
+                "|-\n"
+                '! scope="col" | Organisation\n'
+                '! scope="col" | Platform\n|-\n'
+                "| [[Organised_Editing/Activities/HOT | HOT]]\n"
+                "| [http://www.tasks.hotosm.org/ HOT tasking manager]\n"
+                "|-\n"
+                "|}"
+            )
+        }
+    }

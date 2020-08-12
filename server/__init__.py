@@ -38,7 +38,7 @@ def add_api_endpoints(app):
         methods=["POST"],
     )
     app.add_url_rule(
-        "/git/<string:platform_name>/" "<string:organisation_name>/<int:project_id>/",
+        "/git/<string:platform_name>/<string:organisation_name>/<int:project_id>/",
         view_func=GitDocumentApi.as_view("update_git_document"),
         methods=["PATCH"],
     )
@@ -47,4 +47,9 @@ def add_api_endpoints(app):
         "/wiki/",
         view_func=WikiDocumentApi.as_view("create_wiki_document"),
         methods=["POST"],
+    )
+    app.add_url_rule(
+        "/wiki/<string:organisation_name>/<string:project_name>/",
+        view_func=WikiDocumentApi.as_view("update_wiki_document"),
+        methods=["PATCH"],
     )

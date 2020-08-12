@@ -25,3 +25,7 @@ class ProjectSchema(CamelCaseSchema):
     created = ma.DateTime("%Y-%m-%dT%H:%M:%S.%fZ", required=True)
     external_source = ma.Nested(ExternalSourceSchema)
     users = ma.List(ma.Nested(UserSchema))
+
+
+class ProjectListSchema(CamelCaseSchema):
+    project = ma.List(ma.Nested(ProjectSchema), required=False)

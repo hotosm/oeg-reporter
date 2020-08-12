@@ -9,10 +9,10 @@ class OverviewPageTemplates:
         "|}\n"
     )
     oeg_page = "Organised_Editing/Activities"
-    page_initial_section = "=Activities="
-    page_template = "=Activities=\n"
+    page_initial_section = "Activities"
+    page_template = "==Activities==\n"
     table_template = (
-        "==Activities list==\n"
+        "===Activities list===\n"
         "{|class='wikitable sortable'\n"
         "|-\n"
         '! scope="col" | Organisation\n'
@@ -20,6 +20,8 @@ class OverviewPageTemplates:
         "|-\n"
         "|}\n"
     )
+    overview_list_organisation_name_column = 0
+    overview_list_platform_name_column = 1
 
 
 class OrganisationPageTemplates:
@@ -53,6 +55,10 @@ class OrganisationPageTemplates:
         "|-\n"
         "|}\n"
     )
+    projects_list_project_name_column = 0
+    projects_list_platform_name_column = 1
+    projects_list_project_author_column = 2
+    projects_list_project_status_column = 3
 
 
 class ProjectPageTemplates:
@@ -74,7 +80,7 @@ class ProjectPageTemplates:
         "===List of Users===\n"
     )
     page_initial_section = "Project"
-    project_session = "Project"
+    project_section = "Project"
     short_description_section = "Short Description"
     timeframe_section = "Timeframe"
     created_date = "Start Date"
@@ -103,3 +109,6 @@ class ProjectPageTemplates:
         "|-\n"
         "|}\n"
     )
+
+    users_list_user_id_column = 0
+    users_list_user_name_column = 1

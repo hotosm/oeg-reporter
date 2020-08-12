@@ -1,8 +1,12 @@
+import re
+from datetime import datetime
+
 from server.services.wiki.pages.templates import ProjectPageTemplates
 from server.services.wiki.pages.page_service import PageService
 from server.services.wiki.mediawiki_service import MediaWikiService
 from server.services.wiki.wiki_text_service import WikiTextService
 from server.services.wiki.wiki_table_service import WikiTableService
+from server.models.serializers.document import DocumentSchema
 
 
 class ProjectPageService(PageService):
@@ -105,7 +109,7 @@ class ProjectPageService(PageService):
         }
         return project_page_sections
 
-    def get_project_users_table_rows(self, project_page_data):
+    def get_project_users_table_rows(self, project_page_data: dict):
         users = project_page_data["project"]["users"]
         project_users = ""
         for user in users:
@@ -120,14 +124,13 @@ class ProjectPageService(PageService):
         document_data -- All required data for a project using
                          Organised Editing Guidelines
         """
-        wikitext = WikiTextService()
         mediawiki = MediaWikiService()
 
         token = mediawiki.get_token()
 
         project_page_sections = self.document_to_page_sections(document_data)
 
-        sections_text = wikitext.generate_text_from_dict(
+        sections_text = WikiTextService().generate_text_from_dict(
             self.templates.page_template,
             f"=={self.templates.page_initial_section}==",
             project_page_sections,
@@ -141,6 +144,139 @@ class ProjectPageService(PageService):
 
         mediawiki.create_page(
             token=token,
-            page_title=document_data["project"]["name"],
+            page_title=document_data["project"]["name"].capitalize(),
             page_text=updated_text,
         )
+
+    def edit_page(
+        self, document_data: dict, update_fields: dict, project_page_data: dict
+    ):
+        """
+        Edits a wiki page
+
+        Keyword arguments:
+        document_data -- All required data for a project using
+                         Organised Editing Guidelines
+        """
+        mediawiki = MediaWikiService()
+        token = mediawiki.get_token()
+        page_path = project_page_data["project"]["name"].capitalize()
+
+        project_page_sections = self.document_to_page_sections(document_data)
+
+        sections_text = WikiTextService().generate_text_from_dict(
+            self.templates.page_template,
+            f"=={self.templates.page_initial_section}==",
+            project_page_sections,
+        )
+        updated_text = WikiTableService().add_table_row(
+            page_text=sections_text,
+            new_row=self.get_project_users_table_rows(document_data),
+            table_section_title=self.templates.team_user_section,
+            table_template=self.templates.table_template,
+        )
+
+        if (
+            "project" in update_fields.keys()
+            and "name" in update_fields["project"].keys()
+            and update_fields["project"]["name"].capitalize()
+            != project_page_data["project"]["name"].capitalize()
+        ):
+            new_page = document_data["project"]["name"].capitalize()
+            mediawiki.move_page(token=token, old_page=page_path, new_page=new_page)
+            mediawiki.edit_page(token, new_page, updated_text)
+        else:
+            mediawiki.edit_page(token, page_path, updated_text)
+
+    def parse_page_to_serializer(self, page_dictionary: dict, project_name: str):
+        project_page_data = {"project": {"externalSource": {}}}
+
+        project_page_data["project"]["name"] = project_name.capitalize()
+
+        project_page_data["project"]["shortDescription"] = page_dictionary[
+            self.templates.project_section
+        ][self.templates.short_description_section].replace("\n", "")
+
+        project_page_data["project"]["created"] = self.get_date_from_timeframe(
+            page_dictionary[self.templates.project_section][
+                self.templates.timeframe_section
+            ].replace("\n", "")
+        )
+        project_page_data["project"]["changesetComment"] = self.get_parsed_hashtag(
+            page_dictionary[self.templates.project_section][
+                self.templates.hashtag_section
+            ].replace("\n", "")
+        )
+
+        project_url, project_id = self.get_url_and_id_from_project_url(
+            page_dictionary[self.templates.project_section][
+                self.templates.url_section
+            ].replace("\n", "")
+        )
+        project_page_data["project"]["url"] = project_url
+        project_page_data["project"]["projectId"] = project_id
+
+        project_page_data["project"]["externalSource"][
+            "instructions"
+        ] = page_dictionary[self.templates.external_sources_section][
+            self.templates.instructions_section
+        ].replace(
+            "\n", ""
+        )
+        project_page_data["project"]["externalSource"][
+            "perTaskInstructions"
+        ] = page_dictionary[self.templates.external_sources_section][
+            self.templates.per_task_instructions_section
+        ].replace(
+            "\n", ""
+        )
+        project_page_data["project"]["externalSource"]["imagery"] = page_dictionary[
+            self.templates.external_sources_section
+        ][self.templates.imagery_section].replace("\n", "")
+        project_page_data["project"]["externalSource"]["license"] = page_dictionary[
+            self.templates.external_sources_section
+        ][self.templates.license_section].replace("\n", "")
+
+        project_page_data["project"]["users"] = self.get_project_users(
+            page_dictionary[self.templates.team_user_section][
+                self.templates.users_list_section
+            ]
+        )
+        # validate
+        document_schema = DocumentSchema(partial=True, only=self.page_fields)
+        document_schema.load(project_page_data)
+        return project_page_data
+
+    def get_project_users(self, table_text: str):
+        users_list_table = WikiTableService().get_text_table(table_text)
+        users_list_data = users_list_table.data(span=False)
+        users_list = []
+
+        for table_row_number, table_row_data in enumerate(users_list_data[1:], start=1):
+            user_id = users_list_table.cells(
+                row=table_row_number, column=self.templates.users_list_user_id_column
+            ).value
+
+            user_name = users_list_table.cells(
+                row=table_row_number, column=self.templates.users_list_user_name_column
+            ).value
+            users_list.append(
+                {"userId": user_id.strip(), "userName": user_name.strip()}
+            )
+        return users_list
+
+    def get_date_from_timeframe(self, timeframe_text: str):
+        date = re.search(r"\d{2}\s\w+\s\d{4}", timeframe_text)
+        parsed_date = datetime.strptime(date.group(), "%m %B %Y").strftime(
+            "%Y-%m-%dT%H:%M:%S.%fZ"
+        )
+        return parsed_date
+
+    def get_url_and_id_from_project_url(self, url_text: str):
+        project_url = url_text
+        project_id = int(url_text.split("/projects/")[-1])
+        return project_url, project_id
+
+    def get_parsed_hashtag(self, hashtag_text: str):
+        hashtag = "#" + hashtag_text.split("</nowiki>")[-1]
+        return hashtag

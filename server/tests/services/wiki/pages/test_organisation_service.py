@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from copy import deepcopy
 
 from server.tests.base_test_config import BaseTestCase
 from server.tests.helpers import utils
@@ -110,11 +111,167 @@ class TestOrganisationService(BaseTestCase):
         )
         mocked_table_row.return_value = text_with_table
 
-        page_path = (
-            f"{self.templates.oeg_page}/{self.document_data['organisation']['name']}"
-        )
+        page_path = f"{self.templates.oeg_page}/{self.document_data['organisation']['name'].capitalize()}"
 
         OrganisationPageService().create_page(self.document_data)
         mocked_mediawiki.return_value.create_page.assert_called_with(
             token, page_path, text_with_table
         )
+
+    def test_parse_page_to_serializer(self):
+        organisation_serialized_fields = OrganisationPageService().parse_page_to_serializer(
+            self.templates.page_dictionary
+        )
+
+        expected_serialized_fields = self.document_data.copy()
+        expected_serialized_fields["project"] = [
+            {
+                "name": self.document_data["project"]["name"],
+                "author": self.document_data["project"]["author"],
+                "status": self.document_data["project"]["status"],
+            }
+        ]
+        self.assertDictEqual(expected_serialized_fields, organisation_serialized_fields)
+
+    @patch("server.services.wiki.pages.organisation_service." "MediaWikiService")
+    def test_edit_page_text(self, mocked_mediawiki):
+        updated_project_name = "updated project name"
+        update_fields = {"project": {"name": updated_project_name}}
+        updated_organisation_page_data = deepcopy(self.document_data)
+        updated_organisation_page_data["project"]["name"] = updated_project_name
+
+        projects_list_table = (
+            "{|class='wikitable sortable'\n"
+            "|-\n"
+            '! scope="col" | Name\n'
+            "|-\n"
+            "| [[Project name example | Project name example]]\n"
+            "|-\n"
+            "|}\n"
+        )
+        mocked_mediawiki.return_value.get_page_text.return_value = (
+            f"{self.templates.page_initial_section}\n"
+            f"=={self.templates.projects_list_section}==\n"
+            f"{projects_list_table}"
+        )
+        edited_page_text = OrganisationPageService().get_edit_page_text(
+            update_fields, self.document_data, updated_organisation_page_data
+        )
+        mocked_mediawiki.return_value.get_page_text.assert_called_with(
+            f"{self.templates.oeg_page}/{self.document_data['organisation']['name'].capitalize()}"
+        )
+
+        expected_updated_page_text = (
+            f"{self.templates.page_initial_section}\n\n"
+            f"=={self.templates.projects_section}==\n==={self.templates.projects_list_section}===\n"
+            "{|class='wikitable sortable'\n"
+            "|-\n"
+            '! scope="col" | Name\n'
+            "|-\n"
+            f"| [[{updated_project_name.capitalize()} | {updated_project_name.capitalize()}]]\n"
+            "|-\n"
+            "|}"
+        )
+        self.assertEqual(edited_page_text, expected_updated_page_text)
+
+    @patch("server.services.wiki.pages.organisation_service." "MediaWikiService")
+    @patch(
+        "server.services.wiki.pages.organisation_service."
+        "OrganisationPageService.get_edit_page_text"
+    )
+    def test_edit_page(self, mocked_edited_page_text, mocked_mediawiki):
+        updated_platform_name = "updated platform name"
+        update_fields = {"platform": {"name": updated_platform_name}}
+        updated_organisation_page_data = {"platform": {"name": updated_platform_name}}
+        current_platform_name = "platform name"
+        current_organisation_name = "organisation name"
+        current_organisation_page_data = {
+            "organisation": {"name": current_organisation_name},
+            "platform": {"name": current_platform_name},
+        }
+
+        mocked_mediawiki.return_value.get_token.return_value = "token example"
+
+        updated_text = "Updated text"
+        mocked_edited_page_text.return_value = updated_text
+
+        OrganisationPageService().edit_page(
+            updated_organisation_page_data,
+            update_fields,
+            current_organisation_page_data,
+        )
+        mocked_mediawiki.return_value.edit_page.assert_called_once_with(
+            "token example",
+            f"{self.templates.oeg_page}/{current_organisation_name.capitalize()}",
+            updated_text,
+        )
+
+    @patch("server.services.wiki.pages.organisation_service." "MediaWikiService")
+    @patch(
+        "server.services.wiki.pages.organisation_service."
+        "OrganisationPageService.get_edit_page_text"
+    )
+    def test_edit_page_move_organisation_page(
+        self, mocked_edited_page_text, mocked_mediawiki
+    ):
+        updated_organisation_name = "updated organisation name"
+        update_fields = {"organisation": {"name": updated_organisation_name}}
+        updated_organisation_page_data = {
+            "organisation": {"name": updated_organisation_name}
+        }
+        current_organisation_name = "organisation name"
+        current_organisation_page_data = {
+            "organisation": {"name": current_organisation_name}
+        }
+
+        mocked_mediawiki.return_value.get_token.return_value = "token example"
+
+        updated_text = "Updated text"
+        mocked_edited_page_text.return_value = updated_text
+
+        OrganisationPageService().edit_page(
+            updated_organisation_page_data,
+            update_fields,
+            current_organisation_page_data,
+        )
+
+        mocked_mediawiki.return_value.move_page.assert_called_once_with(
+            token="token example",
+            old_page=f"{self.templates.oeg_page}/{current_organisation_name.capitalize()}",
+            new_page=f"{self.templates.oeg_page}/{updated_organisation_name.capitalize()}",
+        )
+        mocked_mediawiki.return_value.edit_page.assert_called_once_with(
+            "token example",
+            f"{self.templates.oeg_page}/{updated_organisation_name.capitalize()}",
+            updated_text,
+        )
+
+    def test_project_table_field_updated(self):
+        update_fields = {"project": {"name": "updated project name"}}
+        organisation_page_data = {"project": {"name": "project name"}}
+        expected_table_field_updated = "[[Project name | Project name]]"
+        table_field_updated = OrganisationPageService().table_field_updated(
+            update_fields, organisation_page_data
+        )
+        self.assertEqual(expected_table_field_updated, table_field_updated)
+
+    def test_platform_table_field_updated(self):
+        update_fields = {"platform": {"url": "http://www.updatedexample.com"}}
+        organisation_page_data = {
+            "platform": {"name": "platform name", "url": "http://www.example.com"}
+        }
+        expected_table_field_updated = "[http://www.example.com platform name]"
+        table_field_updated = OrganisationPageService().table_field_updated(
+            update_fields, organisation_page_data
+        )
+        self.assertEqual(expected_table_field_updated, table_field_updated)
+
+    def test_table_field_not_updated(self):
+        update_fields = {"organisation": {"name": "updated organisation name"}}
+        organisation_page_data = {
+            "platform": {"name": "platform name", "url": "http://www.example.com"}
+        }
+        is_table_field_updated = OrganisationPageService().table_field_updated(
+            update_fields, organisation_page_data
+        )
+        self.assertFalse(is_table_field_updated)

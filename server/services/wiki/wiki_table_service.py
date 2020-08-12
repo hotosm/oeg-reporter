@@ -36,16 +36,15 @@ class WikiTableService:
 
         Keyword Arguments:
         page_text -- The text which the table content is being added
-        new_row -- The table row which will be added to the page text 
+        new_row -- The table row which will be added to the page text
         table_section_title -- The table section title
         table_template -- The template with the table header
 
         Returns:
-        str -- The page text with the new table row 
+        str -- The page text with the new table row
         """
         page_text += f"{table_template}"
-        section = WikiSectionService()
-        table = section.get_section_table(page_text, table_section_title)
+        table = WikiSectionService().get_section_table(page_text, table_section_title)
 
         table_string = str(table)
         str_index_new_row = self.get_new_row_index(table)
@@ -61,6 +60,28 @@ class WikiTableService:
 
         wtp_page_text.string = page_text[0:text_before_table_index] + updated_table
         return wtp_page_text.string
+
+    def edit_table(
+        self,
+        table: wtp.Table,
+        table_section: str,
+        edit_row_column_data: str,
+        new_row: str,
+    ) -> str:
+        row_number = self.get_table_row_by_column_data(table, edit_row_column_data)
+        row = table.cells(row=row_number)
+        update_row = re.findall(r"\n\|( .+)", new_row)
+        for index, (col, new_col) in enumerate(zip(row, update_row)):
+            col.value = new_col
+        return table_section + table.string
+
+    def get_table_row_by_column_data(self, table, column_data: str) -> int:
+        table_data = table.data(span=False)
+        # ignore header
+        for row_number, row_data in enumerate(table_data[1:], start=1):
+            if column_data.strip() in row_data:
+                return row_number
+        raise ValueError(f"'{column_data}' not present in table")
 
     def get_table_last_column_data(
         self, table: wtp.Table, table_column_numbers: int, row_number: int = 0
@@ -111,3 +132,19 @@ class WikiTableService:
         header_delimiter = "|-\n"
         str_index_new_row = str_index_end_header + len(header_delimiter)
         return str_index_new_row
+
+    def get_text_table(self, text: str):
+        """
+        Returns the table of a text
+
+        Keyword Arguments:
+        text -- The text which the table is being searched
+
+        Returns:
+        table -- The table of the text
+        """
+        try:
+            table = wtp.parse(text).get_tables()[0]
+            return table
+        except IndexError:
+            raise ValueError("Error getting table from text")

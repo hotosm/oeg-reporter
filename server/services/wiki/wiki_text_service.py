@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from flask import current_app
@@ -27,7 +28,7 @@ class WikiTextService:
         for section in sections:
             if section_obj.is_section_being_updated(section, page_data):
                 start_index, end_index = section_obj.get_section_title_str_index(
-                    section, template_text
+                    section, template_text, section.level
                 )
                 page_section_data = page_data[section.title]
 
@@ -47,7 +48,6 @@ class WikiTextService:
                             )
 
                         # Update page text
-                        # if child_section != table_section:
                         updated_text += (
                             template_text[start_index:end_index]
                             + child_section_title
@@ -113,3 +113,16 @@ class WikiTextService:
         except AttributeError:
             current_app.logger.debug("Error parsing date")
             raise ValueError("Error parsing date")
+
+    def get_data_from_external_hyperlink(self, hyperlink: str) -> tuple:
+        url, name = re.search(
+            r"([^\s]+)\s(.*)",
+            hyperlink.replace("[", "").replace("]", "").replace("\n", ""),
+        ).groups()
+        return url.strip(), name.strip()
+
+    def get_data_from_wiki_page_hyperlink(self, hyperlink: str) -> tuple:
+        wiki_page, text = (
+            hyperlink.replace("[", "").replace("]", "").replace("\n", "").split(" | ")
+        )
+        return wiki_page.strip(), text.strip()

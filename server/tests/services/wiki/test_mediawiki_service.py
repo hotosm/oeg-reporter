@@ -323,3 +323,62 @@ class TestMediaWikiService(BaseTestCase):
             data=post_json_data,
         )
         mocked_session.return_value.post.return_value.json.assert_called_with()
+
+    @patch.dict(
+        "server.services.wiki.mediawiki_service.current_app.config",
+        {"WIKI_API_ENDPOINT": "https://your-wiki.org/api.php"},
+    )
+    def test_move_page(self, mocked_session):
+        mocked_session.return_value.post.return_value.json.return_value = {
+            "move": {
+                "from": "Organised Editing/Activities/TM3",
+                "to": "Organised Editing/Activities/TM4",
+            }
+        }
+
+        old_page_title = "old page"
+        new_page_title = "new page"
+        post_page_params = {
+            "action": "move",
+            "from": old_page_title,
+            "to": new_page_title,
+            "movetalk": "true",
+            "format": "json",
+        }
+
+        token = "token example"
+        post_json_data = {"token": token}
+
+        MediaWikiService().move_page(token, old_page_title, new_page_title)
+        mocked_session.return_value.post.assert_called_with(
+            url="https://your-wiki.org/api.php",
+            params=post_page_params,
+            data=post_json_data,
+        )
+        mocked_session.return_value.post.return_value.json.assert_called_with()
+
+    @patch.dict(
+        "server.services.wiki.mediawiki_service.current_app.config",
+        {"WIKI_API_ENDPOINT": "https://your-wiki.org/api.php"},
+    )
+    def test_move_page_fails_with_same_page_name(self, mocked_session):
+        mediawiki = MediaWikiService()
+        token = "token example"
+        old_page_title = "old page"
+        new_page_title = "new page"
+        mocked_session.return_value.post.return_value.json.return_value = {
+            "error": {"code": "selfmove"}
+        }
+        with self.assertRaises(MediaWikiServiceError):
+            mediawiki.move_page(token, old_page_title, new_page_title)
+
+    def test_is_redirect_page(self, mocked_session):
+        redirected_page = "page name"
+        page_text = f"#REDIRECT [[{redirected_page}]]"
+        redirect_page = MediaWikiService().is_redirect_page(page_text)
+        self.assertEqual(redirected_page, redirect_page)
+
+    def test_is_not_redirect_page(self, mocked_session):
+        # page_text = f"page text"
+        redirect_page = MediaWikiService().is_redirect_page("page text")
+        self.assertFalse(redirect_page)

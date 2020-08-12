@@ -1,3 +1,5 @@
+import re
+
 from flask import current_app
 
 import requests
@@ -41,7 +43,10 @@ class MediaWikiService:
         r = self.session.get(url=self.endpoint, params=params)
         data = r.json()
         if "error" in list(data.keys()) and data["error"]["code"] == "missingtitle":
-            raise MediaWikiServiceError("The page you specified doesn't exist")
+            raise MediaWikiServiceError(
+                f"Error getting text from the page '{page_title}'."
+                " Page does not exist."
+            )
         else:
             text = data["parse"]["wikitext"]["*"]
             return text
@@ -100,7 +105,9 @@ class MediaWikiService:
         )
         data = r.json()
         if "error" in list(data.keys()) and data["error"]["code"] == "articleexists":
-            raise MediaWikiServiceError("The page you specified already exist")
+            raise MediaWikiServiceError(
+                f"Error creating the page '{page_title}'." " Page already exists"
+            )
         else:
             return data
 
@@ -135,9 +142,51 @@ class MediaWikiService:
         )
         data = r.json()
         if "error" in list(data.keys()) and data["error"]["code"] == "missingtitle":
-            raise MediaWikiServiceError("The page you specified doesn't exist")
+            raise MediaWikiServiceError(
+                f"Error editing the page '{page_title}'. Page does not exist"
+            )
         else:
             return data
+
+    def move_page(self, token: str, old_page: str, new_page: str):
+        """
+        Edit a existing wiki page
+
+        Keyword arguments:
+        token -- The MediaWiki API token
+        page_title -- The title of the page being created
+        page_text -- The text of the page being created
+
+        Raises:
+        MediaWikiServiceError -- Exception raised when handling wiki
+
+        Returns:
+        data -- Dictionary with result of post request for creating
+                the page
+        """
+        params = {
+            "action": "move",
+            "from": old_page,
+            "to": new_page,
+            "movetalk": "true",
+            "format": "json",
+        }
+        r = self.session.post(url=self.endpoint, params=params, data={"token": token})
+        data = r.json()
+        if "error" in list(data.keys()) and data["error"]["code"] == "selfmove":
+            raise MediaWikiServiceError(
+                f"Error moving page from '{old_page}' to '{new_page}'."
+                " Both pages have the same title."
+            )
+        else:
+            return data
+
+    def is_redirect_page(self, page_text: str):
+        redirect_page = re.search(r"#REDIRECT\s\[\[(.*?)\]\]", page_text)
+        if redirect_page:
+            return redirect_page.groups()[0]
+        else:
+            return False
 
     def is_valid_token(self, token: str) -> dict:
         """

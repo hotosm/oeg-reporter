@@ -3,10 +3,7 @@ from collections import namedtuple
 import wikitextparser as wtp
 
 from server.tests.base_test_config import BaseTestCase
-from server.services.wiki.wiki_section_service import (
-    WikiSectionService,
-    WikiSectionServiceError,
-)
+from server.services.wiki.wiki_section_service import WikiSectionService
 
 
 class TestWikiSectionService(BaseTestCase):
@@ -17,7 +14,6 @@ class TestWikiSectionService(BaseTestCase):
         section = SectionStub(section_title)
 
         page_data = {section_title: "section text"}
-        # section_service = WikiSectionService()
         updated_section = WikiSectionService().is_section_being_updated(
             section, page_data
         )
@@ -30,7 +26,6 @@ class TestWikiSectionService(BaseTestCase):
         section = SectionStub(section_title)
 
         page_data = {section_title: "section text"}
-        # section_service = WikiSectionService()
         updated_section = WikiSectionService().is_section_being_updated(
             section, page_data
         )
@@ -38,7 +33,6 @@ class TestWikiSectionService(BaseTestCase):
 
     def test_section_parent_section_contains_child_section(self):
         page_section_data = {"child section": "child section text"}
-        # section_service = WikiSectionService()
         contains_child_section = WikiSectionService().parent_section_contains_child_section(
             page_section_data
         )
@@ -46,7 +40,6 @@ class TestWikiSectionService(BaseTestCase):
 
     def test_section_parent_section_not_contains_child_section(self):
         page_section_data = "parent section text"
-        # section_service = WikiSectionService()
         contains_child_section = WikiSectionService().parent_section_contains_child_section(
             page_section_data
         )
@@ -92,7 +85,7 @@ class TestWikiSectionService(BaseTestCase):
     def test_get_section_index_fails_with_no_existing_section(self):
         text = "=Section=\nSection text\n=Second section="
         section_service = WikiSectionService()
-        with self.assertRaises(WikiSectionServiceError):
+        with self.assertRaises(ValueError):
             section_service.get_section_index(text, "Non existing section")
 
     def test_get_section_table(self):
@@ -117,3 +110,17 @@ class TestWikiSectionService(BaseTestCase):
         table_col_data = section_table.data()[1][0]
         self.assertEqual(col_header, table_header_data)
         self.assertEqual(col_data, table_col_data)
+
+    def test_get_section_table_fails_without_table_in_text(self):
+        text_without_table = "=Section title=\nText without table"
+        with self.assertRaises(ValueError):
+            WikiSectionService().get_section_table(text_without_table, "Section title")
+
+    def test_get_section_title_str_index_fails_with_no_existing_section(self):
+        template_text = "=Section=\n" "Section text"
+        section = wtp.Section("=Different Section title=\n" "Section text")
+        section_level = section.level
+        with self.assertRaises(ValueError):
+            WikiSectionService().get_section_title_str_index(
+                section, template_text, section_level
+            )

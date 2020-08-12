@@ -1,18 +1,6 @@
 import re
 
-from flask import current_app
-
 import wikitextparser as wtp
-
-
-class WikiSectionServiceError(Exception):
-    """
-    Custom Exception to notify callers an error occurred when handling wiki
-    """
-
-    def __init__(self, message):
-        if current_app:
-            current_app.logger.error(message)
 
 
 class WikiSectionService:
@@ -41,7 +29,7 @@ class WikiSectionService:
                          in which the index is searched
 
         Raises:
-        WikiSectionServiceError -- Exception raised when handling wiki
+        ValueError -- Exception raised when handling wiki
 
         Returns:
         index -- The index of the section
@@ -50,7 +38,9 @@ class WikiSectionService:
         for index, section in enumerate(sections):
             if section.title is not None and section.title == section_title:
                 return index
-        raise WikiSectionServiceError("The section you specified doesn't exist")
+        raise ValueError(
+            f"Error getting section '{section_title}' index." " Section doesn't exist"
+        )
 
     def get_section_table(self, text: str, section_title: str) -> wtp.Table:
         """
@@ -67,27 +57,39 @@ class WikiSectionService:
         Returns:
         index -- The index of the section
         """
-        section = self.get_section_index(text, section_title)
-        sections = self.get_sections(text)
-        table = sections[section].get_tables()[0]
-        return table
+        try:
+            section = self.get_section_index(text, section_title)
+            sections = self.get_sections(text)
+            table = sections[section].get_tables()[0]
+            return table
+        except IndexError:
+            raise ValueError(
+                f"Error getting table from section '{section_title}'."
+                " Section does not contain a table"
+            )
 
     def get_section_title_str_index(
-        self, section: wtp.Section, template_text: str
+        self, section: wtp.Section, template_text: str, section_level: int
     ) -> tuple:
         """
         Get the starting and ending position of
         a section's title string
 
         Keyword arguments:
-        section -- The section which the index is being searched 
+        section -- The section which the index is being searched
         template_text -- The section text template
+        section_level -- Integer representing the section level
 
         Returns:
         start_end_index,end_index -- The starting and ending position of
                                      a section's title string
         """
-        section_title_string = re.search(f"(=)*({section.title})(=)*", template_text)
+        section_title_string = re.search(
+            f"(=){{{section_level}}}({section.title})(=){{{section_level}}}",
+            template_text,
+        )
+        if section_title_string is None:
+            raise ValueError(f"Error getting section '{section.title}' index.")
         start_index = section_title_string.span()[0]
         end_index = section_title_string.span()[1]
         return start_index, end_index

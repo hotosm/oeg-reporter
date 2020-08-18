@@ -24,24 +24,28 @@ def generate_document_data_from_wiki_pages(
     )
 
     project_page = ProjectPageService()
-    project_dictionary = project_page.wikitext_to_dict(project_name.capitalize())
+    project_dictionary = project_page.wikitext_to_dict(
+        f"{organisation_page.templates.oeg_page}/"
+        f"Projects/{project_name.capitalize()}"
+    )
     project_page_data = project_page.parse_page_to_serializer(
         project_dictionary, project_name.capitalize()
     )
 
     document = {
         "organisation": organisation_page_data["organisation"],
-        "platform": organisation_page_data["platform"],
     }
-    for i, organisation_project in enumerate(organisation_page_data["project"]):
-        if (
-            organisation_project["name"].capitalize()
-            == project_page_data["project"]["name"].capitalize()
-        ):
+    for org_project, org_platform in zip(
+        organisation_page_data["project"], organisation_page_data["platform"]
+    ):
+        if org_project["name"].capitalize().replace("_", " ") == project_page_data[
+            "project"
+        ]["name"].capitalize().replace("_", " "):
             document["project"] = {
-                **organisation_project,
+                **org_project,
                 **project_page_data["project"],
             }
+            document["platform"] = dict.copy(org_platform)
             break
     if "project" not in document.keys():
         raise ValueError(

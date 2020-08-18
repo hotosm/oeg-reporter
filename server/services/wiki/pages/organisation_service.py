@@ -111,8 +111,11 @@ class OrganisationPageService(PageService):
         )
 
         project_wiki_page = wikitext.hyperlink_wiki_page(
-            organisation_page_data["project"]["name"].capitalize(),
-            organisation_page_data["project"]["name"].capitalize(),
+            wiki_page=(
+                f"{self.templates.oeg_page}/Projects/"
+                f'{organisation_page_data["project"]["name"].capitalize()}'
+            ),
+            text=organisation_page_data["project"]["name"].capitalize(),
         )
 
         new_row = (
@@ -146,9 +149,52 @@ class OrganisationPageService(PageService):
             table_template=self.templates.table_template,
         )
 
-        page_path = f"{self.templates.oeg_page}/{document_data['organisation']['name'].capitalize()}"
+        page_title = f"{self.templates.oeg_page}/{document_data['organisation']['name'].capitalize()}"
         token = mediawiki.get_token()
-        mediawiki.create_page(token, page_path, updated_text)
+        if mediawiki.is_existing_page(page_title):
+            page_text = MediaWikiService().get_page_text(page_title)
+            organisation_page_table = (
+                WikiSectionService()
+                .get_section_table(page_text, self.templates.projects_list_section)
+                .string
+            )
+            updated_text = WikiTableService().add_table_row(
+                page_text=page_text,
+                new_row=self.generate_projects_list_table_row(document_data),
+                table_section_title=self.templates.projects_list_section,
+                table_template=organisation_page_table,
+            )
+            mediawiki.edit_page(token, page_title, updated_text)
+        else:
+            mediawiki.create_page(token, page_title, updated_text)
+
+    def enabled_to_report(self, document_data):
+        page_title = f"{self.templates.oeg_page}/{document_data['organisation']['name'].capitalize()}"
+        if MediaWikiService().is_existing_page(page_title):
+            organisation_dictionary = self.wikitext_to_dict(page_title)
+            serialized_organisation_page = self.parse_page_to_serializer(
+                organisation_dictionary
+            )
+
+            project_names = [
+                project_data["name"]
+                for project_data in serialized_organisation_page["project"]
+            ]
+
+            platform_names = [
+                platform_data["name"]
+                for platform_data in serialized_organisation_page["platform"]
+            ]
+
+            if (
+                document_data["project"]["name"].capitalize() in project_names
+                and document_data["platform"]["name"] in platform_names
+            ):
+                return False
+            else:
+                return True
+        else:
+            return True
 
     def parse_page_to_serializer(self, page_dictionary: dict) -> dict:
         """
@@ -158,7 +204,7 @@ class OrganisationPageService(PageService):
         page_dictionary -- Dictionary containing data from a organisation page.
                            The dictionary keys represents the section title and the value
                            represents the section text
-        
+
         Returns:
         current_organisation_page -- Serialized organisation page data
         """
@@ -173,25 +219,13 @@ class OrganisationPageService(PageService):
         (
             organisation_url,
             organisation_name,
-        ) = WikiTextService().get_data_from_external_hyperlink(
+        ) = WikiTextService().get_page_link_and_text_from_external_hyperlink(
             page_dictionary[self.templates.organisation_section][
                 self.templates.organisation_link_section
             ]
         )
         current_organisation_page["organisation"]["url"] = organisation_url
         current_organisation_page["organisation"]["name"] = organisation_name
-
-        # Add platform url and name to organisation page data
-        (
-            platform_url,
-            platform_name,
-        ) = WikiTextService().get_data_from_external_hyperlink(
-            page_dictionary[self.templates.platform_section][
-                self.templates.platform_link_section
-            ]
-        )
-        current_organisation_page["platform"]["url"] = platform_url
-        current_organisation_page["platform"]["name"] = platform_name
 
         # Add organisation projects to organisation page data
         projects_list_text = page_dictionary[self.templates.projects_section][
@@ -200,6 +234,11 @@ class OrganisationPageService(PageService):
         current_organisation_page["project"] = self.get_organisation_projects(
             projects_list_text
         )
+
+        # Add organisation projects platforms to organisation page data
+        current_organisation_page[
+            "platform"
+        ] = self.get_organisation_projects_platforms(projects_list_text)
 
         # Validate organisation page fields
         document_schema = OrganisationPageSchema(partial=True, only=self.page_fields)
@@ -225,11 +264,11 @@ class OrganisationPageService(PageService):
         updated_text -- Text for the updated organisation page
         """
         # Get text of a organisation page
-        page_path = (
+        page_title = (
             f"{self.templates.oeg_page}/"
             f"{current_organisation_page['organisation']['name'].capitalize()}"
         )
-        page_text = MediaWikiService().get_page_text(page_path)
+        page_text = MediaWikiService().get_page_text(page_title)
 
         # Generate updated text for organisation page
         update_current_organisation_page = self.document_to_page_sections(
@@ -241,8 +280,7 @@ class OrganisationPageService(PageService):
             update_current_organisation_page,
         )
 
-        # Check if any table field needs to be updated
-        updated_table_field = self.table_field_updated(
+        updated_table_fields = self.get_update_table_fields(
             update_fields, current_organisation_page
         )
 
@@ -257,16 +295,25 @@ class OrganisationPageService(PageService):
         updated_text = (
             sections_text + project_list_section_title + project_list_table.string
         )
-        if updated_table_field:
+        if updated_table_fields:
             # Update organisation page text if any table field needs updated
-            updated_project_row = self.generate_projects_list_table_row(
-                update_organisation_page
+            forbidden_fields = [
+                self.templates.projects_list_project_author_column,
+                self.templates.projects_list_project_status_column,
+            ]
+            project_wiki_page = WikiTextService().hyperlink_wiki_page(
+                wiki_page=(
+                    f"{self.templates.oeg_page}/Projects/"
+                    f'{current_organisation_page["project"]["name"].capitalize()}'
+                ),
+                text=current_organisation_page["project"]["name"].capitalize(),
             )
             updated_project_list_table = WikiTableService().edit_table(
-                project_list_table,
+                project_list_table.string,
                 project_list_section_title,
-                updated_table_field,
-                updated_project_row,
+                updated_table_fields,
+                project_wiki_page,
+                forbidden_fields,
             )
             updated_text = sections_text + updated_project_list_table
         return updated_text
@@ -287,7 +334,7 @@ class OrganisationPageService(PageService):
         # Get the text for the updated organisation page
         mediawiki = MediaWikiService()
         token = mediawiki.get_token()
-        page_path = (
+        page_title = (
             f"{self.templates.oeg_page}/"
             f"{current_organisation_page['organisation']['name'].capitalize()}"
         )
@@ -306,11 +353,164 @@ class OrganisationPageService(PageService):
                 f"{self.templates.oeg_page}/"
                 f'{update_organisation_page["organisation"]["name"].capitalize()}'
             )
-            mediawiki.move_page(token=token, old_page=page_path, new_page=new_page)
+            mediawiki.move_page(token=token, old_page=page_title, new_page=new_page)
             mediawiki.edit_page(token, new_page, updated_text)
-
         else:
-            mediawiki.edit_page(token, page_path, updated_text)
+            mediawiki.edit_page(token, page_title, updated_text)
+
+    def get_update_table_fields(
+        self, update_fields: dict, organisation_page_data: dict
+    ):
+        current_project_page_title = (
+            "Organised_Editing/Activities/Auto_report/Projects/"
+            f"{organisation_page_data['project']['name'].capitalize()}"
+        )
+        current_row_data = {
+            "project_name": WikiTextService().hyperlink_wiki_page(
+                current_project_page_title,
+                organisation_page_data["project"]["name"].capitalize(),
+            ),
+            "platform": WikiTextService().hyperlink_external_link(
+                organisation_page_data["platform"]["name"],
+                organisation_page_data["platform"]["url"],
+            ),
+            "project_author": organisation_page_data["project"]["author"],
+            "project_status": organisation_page_data["project"]["status"],
+        }
+
+        if "platform" in update_fields.keys() and "project" in update_fields.keys():
+            update_project_name = (
+                update_fields["project"]["name"]
+                if "name" in update_fields["project"].keys()
+                else organisation_page_data["project"]["name"]
+            )
+            update_project_page_title = (
+                "Organised_Editing/Activities/Auto_report/Projects/"
+                f"{update_project_name.capitalize()}"
+            )
+
+            update_platform_name = (
+                update_fields["platform"]["name"]
+                if "name" in update_fields["platform"].keys()
+                else organisation_page_data["platform"]["name"]
+            )
+            update_platform_url = (
+                update_fields["platform"]["url"]
+                if "url" in update_fields["platform"].keys()
+                else organisation_page_data["platform"]["url"]
+            )
+
+            update_project_author = (
+                update_fields["project"]["author"]
+                if "author" in update_fields["project"].keys()
+                else organisation_page_data["project"]["author"]
+            )
+            update_project_status = (
+                update_fields["project"]["status"]
+                if "status" in update_fields["project"].keys()
+                else organisation_page_data["project"]["status"]
+            )
+
+            update_fields = {
+                self.templates.projects_list_project_name_column: {
+                    "current": current_row_data["project_name"],
+                    "update": WikiTextService().hyperlink_wiki_page(
+                        update_project_page_title, update_project_name.capitalize()
+                    ),
+                },
+                self.templates.projects_list_platform_name_column: {
+                    "current": current_row_data["platform"],
+                    "update": WikiTextService().hyperlink_external_link(
+                        update_platform_name, update_platform_url
+                    ),
+                },
+                self.templates.projects_list_project_author_column: {
+                    "current": current_row_data["project_author"],
+                    "update": update_project_author,
+                },
+                self.templates.projects_list_project_status_column: {
+                    "current": current_row_data["project_status"],
+                    "update": update_project_status,
+                },
+            }
+            return update_fields
+        elif "platform" in update_fields.keys():
+            update_platform_name = (
+                update_fields["platform"]["name"]
+                if "name" in update_fields["platform"].keys()
+                else organisation_page_data["platform"]["name"]
+            )
+            update_platform_url = (
+                update_fields["platform"]["url"]
+                if "url" in update_fields["platform"].keys()
+                else organisation_page_data["platform"]["url"]
+            )
+            update_fields = {
+                self.templates.projects_list_project_name_column: {
+                    "current": current_row_data["project_name"],
+                    "update": current_row_data["project_name"],
+                },
+                self.templates.projects_list_platform_name_column: {
+                    "current": current_row_data["platform"],
+                    "update": WikiTextService().hyperlink_external_link(
+                        update_platform_name, update_platform_url
+                    ),
+                },
+                self.templates.projects_list_project_author_column: {
+                    "current": current_row_data["project_author"],
+                    "update": current_row_data["project_author"],
+                },
+                self.templates.projects_list_project_status_column: {
+                    "current": current_row_data["project_status"],
+                    "update": current_row_data["project_status"],
+                },
+            }
+            return update_fields
+        elif "project" in update_fields.keys():
+            update_project_name = (
+                update_fields["project"]["name"]
+                if "name" in update_fields["project"].keys()
+                else organisation_page_data["project"]["name"]
+            )
+            update_project_page_title = (
+                "Organised_Editing/Activities/Auto_report/Projects/"
+                f"{update_project_name.capitalize()}"
+            )
+
+            update_project_author = (
+                update_fields["project"]["author"]
+                if "author" in update_fields["project"].keys()
+                else organisation_page_data["project"]["author"]
+            )
+            update_project_status = (
+                update_fields["project"]["status"]
+                if "status" in update_fields["project"].keys()
+                else organisation_page_data["project"]["status"]
+            )
+
+            update_fields = {
+                self.templates.projects_list_project_name_column: {
+                    "current": current_row_data["project_name"],
+                    "update": WikiTextService().hyperlink_wiki_page(
+                        update_project_page_title, update_project_name.capitalize()
+                    ),
+                },
+                self.templates.projects_list_platform_name_column: {
+                    "current": current_row_data["platform"],
+                    "update": current_row_data["platform"],
+                },
+                self.templates.projects_list_project_author_column: {
+                    "current": current_row_data["project_author"],
+                    "update": update_project_author,
+                },
+                self.templates.projects_list_project_status_column: {
+                    "current": current_row_data["project_status"],
+                    "update": update_project_status,
+                },
+            }
+            return update_fields
+        else:
+            return False
 
     def table_field_updated(self, update_fields: dict, current_organisation_page: dict):
         if "platform" in update_fields.keys():
@@ -329,7 +529,7 @@ class OrganisationPageService(PageService):
     def get_organisation_projects(self, table_text: str):
         projects_list_table = WikiTableService().get_text_table(table_text)
         projects_list_data = projects_list_table.data(span=False)
-        organisation_project = []
+        organisation_projects = []
 
         for table_row_number, table_row_data in enumerate(
             projects_list_data[1:], start=1
@@ -338,9 +538,11 @@ class OrganisationPageService(PageService):
                 row=table_row_number,
                 column=self.templates.projects_list_project_name_column,
             ).value
-            project_name = WikiTextService().get_data_from_wiki_page_hyperlink(
+            project_name = WikiTextService().get_page_link_and_text_from_wiki_page_hyperlink(
                 project_wiki_page_hyperlink
-            )[0]
+            )[
+                1
+            ]
 
             project_author = projects_list_table.cells(
                 row=table_row_number,
@@ -352,7 +554,7 @@ class OrganisationPageService(PageService):
                 column=self.templates.projects_list_project_status_column,
             ).value
 
-            organisation_project.append(
+            organisation_projects.append(
                 {
                     "name": project_name.strip(),
                     "author": project_author.strip(),
@@ -360,4 +562,28 @@ class OrganisationPageService(PageService):
                 }
             )
 
-        return organisation_project
+        return organisation_projects
+
+    def get_organisation_projects_platforms(self, table_text):
+        projects_list_table = WikiTableService().get_text_table(table_text)
+        projects_list_data = projects_list_table.data(span=False)
+        projects_platforms = []
+
+        for table_row_number, table_row_data in enumerate(
+            projects_list_data[1:], start=1
+        ):
+            platform_external_hyperlink = projects_list_table.cells(
+                row=table_row_number,
+                column=self.templates.projects_list_platform_name_column,
+            ).value
+            (
+                platform_url,
+                platform_name,
+            ) = WikiTextService().get_page_link_and_text_from_external_hyperlink(
+                platform_external_hyperlink
+            )
+
+            projects_platforms.append(
+                {"name": platform_name.strip(), "url": platform_url.strip(),}  # noqa
+            )
+        return projects_platforms

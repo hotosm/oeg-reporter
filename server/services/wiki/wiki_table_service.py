@@ -63,25 +63,60 @@ class WikiTableService:
 
     def edit_table(
         self,
-        table: wtp.Table,
+        table: str,
         table_section: str,
-        edit_row_column_data: str,
-        new_row: str,
-    ) -> str:
-        row_number = self.get_table_row_by_column_data(table, edit_row_column_data)
-        row = table.cells(row=row_number)
-        update_row = re.findall(r"\n\|( .+)", new_row)
-        for index, (col, new_col) in enumerate(zip(row, update_row)):
-            col.value = new_col
-        return table_section + table.string
+        update_table_data: dict,
+        table_row_identifier_column: str = "",
+        columns_updated_in_one_row: list = [],
+    ):
 
-    def get_table_row_by_column_data(self, table, column_data: str) -> int:
-        table_data = table.data(span=False)
-        # ignore header
-        for row_number, row_data in enumerate(table_data[1:], start=1):
-            if column_data.strip() in row_data:
-                return row_number
-        raise ValueError(f"'{column_data}' not present in table")
+        """
+        Edit table rows in a page text
+
+        Keyword Arguments:
+        table -- The text which the table content is being updated
+        table_section_title -- The table section title
+        update_table_data -- Dict with data with the update row
+        table_row_identifier_column -- Identify table row that must be updated in case
+                                       of there columns that must be updated only in the
+                                      updated table row
+        columns_updated_in_one_row -- List with columns that must be updated only in the
+                                      updated table row
+        Returns:
+        str -- The page text with the updated table
+        """
+        table_string = "".join(table)
+        updated_table = wtp.Table(table_string)
+
+        table_data = updated_table.data(span=False)
+        for row_number, _ in enumerate(table_data[1:], start=1):
+            for edit_col in update_table_data:
+                updated_table = wtp.Table(table_string)
+                cell = updated_table.cells(row=row_number, column=edit_col).value
+                if cell.strip() == update_table_data[edit_col]["current"].strip():
+                    # Update data if column must be edited only in one row
+                    if columns_updated_in_one_row:
+                        if (
+                            edit_col in columns_updated_in_one_row
+                            and table_row_identifier_column in table_data[row_number]
+                        ):
+                            updated_table.cells(
+                                row=row_number, column=edit_col
+                            ).value = f" {update_table_data[edit_col]['update']}"
+                            table_string = "".join(updated_table.string)
+                        elif edit_col not in columns_updated_in_one_row:
+                            updated_table.cells(
+                                row=row_number, column=edit_col
+                            ).value = f" {update_table_data[edit_col]['update']}"
+                            table_string = "".join(updated_table.string)
+
+                    # Update column data that can be edited in many rows
+                    else:
+                        updated_table.cells(
+                            row=row_number, column=edit_col
+                        ).value = f" {update_table_data[edit_col]['update']}"
+                        table_string = "".join(updated_table.string)
+        return table_section + updated_table.string
 
     def get_table_last_column_data(
         self, table: wtp.Table, table_column_numbers: int, row_number: int = 0

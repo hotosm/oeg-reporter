@@ -76,25 +76,32 @@ class TestOverviewService(BaseTestCase):
     def test_create_page(self, mocked_table_row, mocked_mediawiki):
         token = "token example"
         mocked_mediawiki.return_value.get_token.return_value = token
+        mocked_mediawiki.return_value.is_existing_page.return_value = True
+
+        organisation_name = self.document_data["organisation"]["name"]
+        platform_name = self.document_data["platform"]["name"]
 
         text_with_table = (
-            "=Section=\nSection text\n"
-            "==Table Section==\n"
+            "==Activities==\n"
+            "===Activities list===\n"
             "{|class='wikitable sortable'\n"
             "|-\n"
-            '! scope="col" | Column header\n'
+            "! scope='col' | Organisation\n"
+            "! scope='col' | Platform\n"
             "|-\n"
-            "| Column data\n"
+            f"| [[Organised_Editing/Activities/Auto_report/{organisation_name} | {organisation_name}]]\n"
+            f"| [https://tasks-stage.hotosm.org/ {platform_name}]\n"
             "|-\n"
-            "|}"
+            "|}\n"
         )
         mocked_table_row.return_value = text_with_table
+        mocked_mediawiki.return_value.get_page_text.return_value = text_with_table
 
-        page_path = self.templates.oeg_page
+        page_title = self.templates.oeg_page
 
         OverviewPageService().create_page(self.document_data)
-        mocked_mediawiki.return_value.create_page.assert_called_with(
-            token, page_path, text_with_table
+        mocked_mediawiki.return_value.edit_page.assert_called_with(
+            token, page_title, text_with_table
         )
 
     @patch("server.services.wiki.pages.overview_service." "MediaWikiService")
@@ -104,12 +111,18 @@ class TestOverviewService(BaseTestCase):
         updated_overview_page_data = deepcopy(self.document_data)
         updated_overview_page_data["organisation"]["name"] = updated_organisation_name
 
+        organisation_name = self.document_data["organisation"]["name"]
+        platform_name = self.document_data["platform"]["name"]
+
         overview_page_table = (
             "{|class='wikitable sortable'\n"
             "|-\n"
-            '! scope="col" | Organisation\n'
+            "! scope='col' | Organisation\n"
+            "! scope='col' | Platform\n"
             "|-\n"
-            f"| [[{self.templates.oeg_page}/Hot | Hot]]\n"
+            f"| [[Organised_Editing/Activities/Auto_report/{organisation_name.capitalize()}"
+            f" | {organisation_name.capitalize()}]]\n"
+            f"| [https://tasks-stage.hotosm.org/ {platform_name}]\n"
             "|-\n"
             "|}\n"
         )
@@ -129,10 +142,12 @@ class TestOverviewService(BaseTestCase):
             f"==={self.templates.activities_list_section_title}===\n"
             "{|class='wikitable sortable'\n"
             "|-\n"
-            '! scope="col" | Organisation\n'
+            "! scope='col' | Organisation\n"
+            "! scope='col' | Platform\n"
             "|-\n"
             f"| [[{self.templates.oeg_page}/{updated_organisation_name.capitalize()} "
             f"| {updated_organisation_name.capitalize()}]]\n"
+            f"| [https://tasks-stage.hotosm.org/ {platform_name}]\n"
             "|-\n"
             "|}"
         )
@@ -153,7 +168,7 @@ class TestOverviewService(BaseTestCase):
         overview_page_table = (
             "{|class='wikitable sortable'\n"
             "|-\n"
-            '! scope="col" | Organisation\n'
+            "! scope='col' | Organisation\n"
             "|-\n"
             f"| [[{self.templates.oeg_page}/Hot | Hot]]\n"
             "|-\n"
@@ -204,38 +219,6 @@ class TestOverviewService(BaseTestCase):
         mocked_mediawiki.return_value.edit_page.assert_called_once_with(
             "token example", f"{self.templates.oeg_page}", updated_text
         )
-
-    def test_organisation_table_field_updated(self):
-        update_fields = {"organisation": {"name": "updated organisation name"}}
-        overview_page_data = {"organisation": {"name": "organisation name"}}
-        expected_table_field_updated = (
-            f"[[{self.templates.oeg_page}/Organisation name | Organisation name]]"
-        )
-        table_field_updated = OverviewPageService().table_field_updated(
-            update_fields, overview_page_data
-        )
-        self.assertEqual(expected_table_field_updated, table_field_updated)
-
-    def test_platform_table_field_updated(self):
-        update_fields = {"platform": {"url": "http://www.updatedexample.com"}}
-        overview_page_data = {
-            "platform": {"name": "platform name", "url": "http://www.example.com"}
-        }
-        expected_table_field_updated = "[http://www.example.com platform name]"
-        table_field_updated = OverviewPageService().table_field_updated(
-            update_fields, overview_page_data
-        )
-        self.assertEqual(expected_table_field_updated, table_field_updated)
-
-    def test_table_field_not_updated(self):
-        update_fields = {"project": {"name": "updated project name"}}
-        overview_page_data = {
-            "platform": {"name": "platform name", "url": "http://www.example.com"}
-        }
-        is_table_field_updated = OverviewPageService().table_field_updated(
-            update_fields, overview_page_data
-        )
-        self.assertFalse(is_table_field_updated)
 
     def test_parse_page_to_serializer(self):
         overview_serialized_fields = OverviewPageService().parse_page_to_serializer(

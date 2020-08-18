@@ -8,7 +8,7 @@ class OverviewPageTemplates:
         "|-\n"
         "|}\n"
     )
-    oeg_page = "Organised_Editing/Activities"
+    oeg_page = "Organised_Editing/Activities/Auto_report"
     page_initial_section = "Activities"
     page_template = "==Activities==\n"
     table_template = (
@@ -42,7 +42,7 @@ class OrganisationPageTemplates:
     projects_section = "Projects"
     activity_section = "=Activity="
     page_initial_section = "=Activity="
-    oeg_page = "Organised_Editing/Activities"
+    oeg_page = "Organised_Editing/Activities/Auto_report"
     table_template = (
         "==Projects==\n"
         "===Project list===\n"
@@ -80,6 +80,7 @@ class ProjectPageTemplates:
         "===List of Users===\n"
     )
     page_initial_section = "Project"
+    oeg_page = "Organised_Editing/Activities/Auto_report"
     project_section = "Project"
     short_description_section = "Short Description"
     timeframe_section = "Timeframe"

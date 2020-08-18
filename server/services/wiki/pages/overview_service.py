@@ -75,10 +75,10 @@ class OverviewPageService(PageService):
         wikitext = WikiTextService()
 
         organisation_name = overview_page_data["organisation"]["name"].capitalize()
-        organisation_page_path = f"{self.templates.oeg_page}/" f"{organisation_name}"
+        organisation_page_title = f"{self.templates.oeg_page}/" f"{organisation_name}"
 
         organisation_link = wikitext.hyperlink_wiki_page(
-            organisation_page_path, organisation_name
+            organisation_page_title, organisation_name
         )
 
         platform_link = wikitext.hyperlink_external_link(
@@ -116,43 +116,83 @@ class OverviewPageService(PageService):
             table_section_title=self.templates.activities_list_section_title,
             table_template=self.templates.table_template,
         )
-        mediawiki.create_page(token, page_title, updated_text)
+        if mediawiki.is_existing_page(page_title):
+            page_text = MediaWikiService().get_page_text(self.templates.oeg_page)
+            overview_page_table = (
+                WikiSectionService()
+                .get_section_table(
+                    page_text, self.templates.activities_list_section_title
+                )
+                .string
+            )
+            updated_text = WikiTableService().add_table_row(
+                page_text=page_text,
+                new_row=self.generate_activities_list_table_row(document_data),
+                table_section_title=self.templates.activities_list_section_title,
+                table_template=overview_page_table,
+            )
+            mediawiki.edit_page(token, self.templates.oeg_page, updated_text)
+        else:
+            mediawiki.create_page(token, page_title, updated_text)
+
+    def enabled_to_report(self, document_data: dict):
+        if MediaWikiService().is_existing_page(self.templates.oeg_page):
+            overview_dictionary = self.wikitext_to_dict(self.templates.oeg_page)
+            serialized_overview_page = self.parse_page_to_serializer(
+                overview_dictionary
+            )
+
+            organisation_names = [
+                organisation_data["name"]
+                for organisation_data in serialized_overview_page["organisation"]
+            ]
+            platform_names = [
+                platform_data["name"]
+                for platform_data in serialized_overview_page["platform"]
+            ]
+
+            if (
+                document_data["organisation"]["name"].capitalize() in organisation_names
+                and document_data["platform"]["name"] in platform_names
+            ):
+                return False
+            else:
+                return True
+        else:
+            return True
 
     def edit_page_text(
         self, update_fields: dict, overview_page_data: dict, document_data: dict
     ):
         page_text = MediaWikiService().get_page_text(self.templates.oeg_page)
-
-        updated_table_field = self.table_field_updated(
+        updated_table_fields = self.get_update_table_fields(
             update_fields, overview_page_data
         )
-        if updated_table_field:
+        if updated_table_fields:
             overview_page_table = WikiSectionService().get_section_table(
                 page_text, self.templates.activities_list_section_title
             )
-            updated_project_row = self.generate_activities_list_table_row(document_data)
             project_list_section_title = (
                 f"\n=={self.templates.page_initial_section}==\n"
                 f"==={self.templates.activities_list_section_title}===\n"
             )
             updated_text = WikiTableService().edit_table(
-                overview_page_table,
+                overview_page_table.string,
                 project_list_section_title,
-                updated_table_field,
-                updated_project_row,
+                updated_table_fields,
             )
             return updated_text
         else:
             return page_text
 
     def edit_page(
-        self, document_data: dict, update_fields: dict, organisation_page_data: dict
+        self, document_data: dict, update_fields: dict, overview_page_data: dict
     ):
         mediawiki = MediaWikiService()
         token = mediawiki.get_token()
 
         updated_text = self.edit_page_text(
-            update_fields, organisation_page_data, document_data
+            update_fields, overview_page_data, document_data
         )
         mediawiki.edit_page(token, self.templates.oeg_page, updated_text)
 
@@ -163,14 +203,124 @@ class OverviewPageService(PageService):
                 overview_page_data["platform"]["url"],
             )
         elif "organisation" in update_fields.keys():
-            organisation_page_path = (
+            organisation_page_title = (
                 f"{self.templates.oeg_page}/"
                 f"{overview_page_data['organisation']['name'].capitalize()}"
             )
             return WikiTextService().hyperlink_wiki_page(
-                organisation_page_path,
+                organisation_page_title,
                 overview_page_data["organisation"]["name"].capitalize(),
             )
+        else:
+            return False
+
+    def get_update_table_fields(self, update_fields, overview_page_data):
+        current_organisation_page_title = (
+            "Organised_Editing/Activities/Auto_report/"
+            f"{overview_page_data['organisation']['name'].capitalize()}"
+        )
+
+        current_row_data = {
+            "organisation": WikiTextService().hyperlink_wiki_page(
+                current_organisation_page_title,
+                overview_page_data["organisation"]["name"].capitalize(),
+            ),
+            "platform": WikiTextService().hyperlink_external_link(
+                overview_page_data["platform"]["name"],
+                overview_page_data["platform"]["url"],
+            ),
+        }
+        if (
+            "platform" in update_fields.keys()
+            and "organisation" in update_fields.keys()
+        ):
+            update_platform_name = (
+                update_fields["platform"]["name"]
+                if "name" in update_fields["platform"].keys()
+                else overview_page_data["platform"]["name"]
+            )
+            update_platform_url = (
+                update_fields["platform"]["url"]
+                if "url" in update_fields["platform"].keys()
+                else overview_page_data["platform"]["url"]
+            )
+
+            update_organisation_name = (
+                update_fields["organisation"]["name"].capitalize()
+                if "name" in update_fields["organisation"].keys()
+                else overview_page_data["organisation"]["name"].capitalize()
+            )
+            update_organisation_page_title = (
+                "Organised_Editing/Activities/Auto_report/"
+                f"{update_organisation_name.capitalize()}"
+            )
+
+            update_fields = {
+                self.templates.overview_list_organisation_name_column: {
+                    "current": current_row_data["organisation"],
+                    "update": WikiTextService().hyperlink_wiki_page(
+                        update_organisation_page_title,
+                        update_organisation_name.capitalize(),
+                    ),
+                },
+                self.templates.overview_list_platform_name_column: {
+                    "current": current_row_data["platform"],
+                    "update": WikiTextService().hyperlink_external_link(
+                        update_platform_name, update_platform_url
+                    ),
+                },
+            }
+            return update_fields
+        elif "platform" in update_fields.keys():
+            update_platform_name = (
+                update_fields["platform"]["name"]
+                if "name" in update_fields["platform"].keys()
+                else overview_page_data["platform"]["name"]
+            )
+            update_platform_url = (
+                update_fields["platform"]["url"]
+                if "url" in update_fields["platform"].keys()
+                else overview_page_data["platform"]["url"]
+            )
+
+            update_fields = {
+                self.templates.overview_list_organisation_name_column: {
+                    "current": current_row_data["organisation"],
+                    "update": current_row_data["organisation"],
+                },
+                self.templates.overview_list_platform_name_column: {
+                    "current": current_row_data["platform"],
+                    "update": WikiTextService().hyperlink_external_link(
+                        update_platform_name, update_platform_url
+                    ),
+                },
+            }
+            return update_fields
+        elif "organisation" in update_fields.keys():
+            update_organisation_name = (
+                update_fields["organisation"]["name"].capitalize()
+                if "name" in update_fields["organisation"].keys()
+                else overview_page_data["organisation"]["name"].capitalize()
+            )
+            update_organisation_page_title = (
+                "Organised_Editing/Activities/Auto_report/"
+                f"{update_organisation_name.capitalize()}"
+            )
+
+            update_fields = {
+                self.templates.overview_list_organisation_name_column: {
+                    "current": current_row_data["organisation"],
+                    "update": WikiTextService().hyperlink_wiki_page(
+                        update_organisation_page_title,
+                        update_organisation_name.capitalize(),
+                    ),
+                },
+                self.templates.overview_list_platform_name_column: {
+                    "current": current_row_data["platform"],
+                    "update": current_row_data["platform"],
+                },
+            }
+            return update_fields
         else:
             return False
 
@@ -220,13 +370,16 @@ class OverviewPageService(PageService):
 
             organisation_list.append(
                 {
-                    "name": wikitext.get_data_from_wiki_page_hyperlink(
+                    "name": wikitext.get_page_link_and_text_from_wiki_page_hyperlink(
                         hyperlinked_organisation_url
                     )[1]
                 }
             )
 
-            platform_url, platform_name = wikitext.get_data_from_external_hyperlink(
+            (
+                platform_url,
+                platform_name,
+            ) = wikitext.get_page_link_and_text_from_external_hyperlink(
                 hyperlinked_platform_url
             )
             platform_list.append({"name": platform_name, "url": platform_url})

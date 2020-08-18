@@ -142,11 +142,20 @@ class ProjectPageService(PageService):
             table_template=self.templates.table_template,
         )
 
-        mediawiki.create_page(
-            token=token,
-            page_title=document_data["project"]["name"].capitalize(),
-            page_text=updated_text,
+        page_title = (
+            f"{self.templates.oeg_page}/Projects/"
+            f'{document_data["project"]["name"].capitalize()}'
         )
+        if mediawiki.is_existing_page(page_title):
+            raise ValueError(
+                "Error reporting project "
+                f"'{document_data['project']['name'].capitalize()}'."
+                " Project already was reported."
+            )
+        else:
+            mediawiki.create_page(
+                token=token, page_title=page_title, page_text=updated_text,
+            )
 
     def edit_page(
         self, document_data: dict, update_fields: dict, project_page_data: dict
@@ -160,7 +169,10 @@ class ProjectPageService(PageService):
         """
         mediawiki = MediaWikiService()
         token = mediawiki.get_token()
-        page_path = project_page_data["project"]["name"].capitalize()
+        page_title = (
+            f"{self.templates.oeg_page}/Projects/"
+            f'{project_page_data["project"]["name"].capitalize()}'
+        )
 
         project_page_sections = self.document_to_page_sections(document_data)
 
@@ -182,11 +194,14 @@ class ProjectPageService(PageService):
             and update_fields["project"]["name"].capitalize()
             != project_page_data["project"]["name"].capitalize()
         ):
-            new_page = document_data["project"]["name"].capitalize()
-            mediawiki.move_page(token=token, old_page=page_path, new_page=new_page)
+            new_page = (
+                f"{self.templates.oeg_page}/Projects/"
+                f'{document_data["project"]["name"].capitalize()}'
+            )
+            mediawiki.move_page(token=token, old_page=page_title, new_page=new_page)
             mediawiki.edit_page(token, new_page, updated_text)
         else:
-            mediawiki.edit_page(token, page_path, updated_text)
+            mediawiki.edit_page(token, page_title, updated_text)
 
     def parse_page_to_serializer(self, page_dictionary: dict, project_name: str):
         project_page_data = {"project": {"externalSource": {}}}

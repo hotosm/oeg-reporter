@@ -55,7 +55,7 @@ class OrganisationPageTemplates:
     projects_section = "Projects"
     activity_section = "=Activity="
     page_initial_section = "=Activity="
-    oeg_page = "Organised_Editing/Activities"
+    oeg_page = "Organised_Editing/Activities/Auto_report"
     table_template = (
         "==Projects==\n"
         "===Project list===\n"
@@ -104,6 +104,7 @@ class ProjectPageTemplates:
         "==Team and User==\n"
         "===List of Users===\n"
     )
+    oeg_page = "Organised_Editing/Activities/Auto_report"
     page_initial_section = "Project"
     project_section = "Project"
     short_description_section = "Short Description"
@@ -169,7 +170,7 @@ class OverviewPageTemplates:
         "|-\n"
         "|}\n"
     )
-    oeg_page = "Organised_Editing/Activities"
+    oeg_page = "Organised_Editing/Activities/Auto_report"
     page_initial_section = "=Activities="
     page_template = "=Activities=\n"
     table_template = (

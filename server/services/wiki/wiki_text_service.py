@@ -114,14 +114,14 @@ class WikiTextService:
             current_app.logger.debug("Error parsing date")
             raise ValueError("Error parsing date")
 
-    def get_data_from_external_hyperlink(self, hyperlink: str) -> tuple:
+    def get_page_link_and_text_from_external_hyperlink(self, hyperlink: str) -> tuple:
         url, name = re.search(
             r"([^\s]+)\s(.*)",
             hyperlink.replace("[", "").replace("]", "").replace("\n", ""),
         ).groups()
         return url.strip(), name.strip()
 
-    def get_data_from_wiki_page_hyperlink(self, hyperlink: str) -> tuple:
+    def get_page_link_and_text_from_wiki_page_hyperlink(self, hyperlink: str) -> tuple:
         wiki_page, text = (
             hyperlink.replace("[", "").replace("]", "").replace("\n", "").split(" | ")
         )

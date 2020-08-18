@@ -32,18 +32,18 @@ class TestWikiTextService(BaseTestCase):
         with self.assertRaises(ValueError):
             WikiTextService().format_date_text(wrong_date)
 
-    def test_get_data_from_external_hyperlink(self):
+    def test_get_page_link_and_text_from_external_hyperlink(self):
         external_hyperlink = "[https://example.com page name]"
         expected_data = ("https://example.com", "page name")
-        hyperlink_data = WikiTextService().get_data_from_external_hyperlink(
+        hyperlink_data = WikiTextService().get_page_link_and_text_from_external_hyperlink(
             external_hyperlink
         )
         self.assertTupleEqual(expected_data, hyperlink_data)
 
-    def test_get_get_data_from_wiki_page_hyperlink(self):
+    def test_get_get_page_link_and_text_from_wiki_page_hyperlink(self):
         wiki_hyperlink = "[wiki_page_link | page name]"
         expected_data = ("wiki_page_link", "page name")
-        hyperlink_data = WikiTextService().get_data_from_wiki_page_hyperlink(
+        hyperlink_data = WikiTextService().get_page_link_and_text_from_wiki_page_hyperlink(
             wiki_hyperlink
         )
         self.assertTupleEqual(expected_data, hyperlink_data)

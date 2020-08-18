@@ -104,6 +104,7 @@ class TestProjectService(BaseTestCase):
     def test_create_page(self, mocked_table_row, mocked_mediawiki):
         token = "token example"
         mocked_mediawiki.return_value.get_token.return_value = token
+        mocked_mediawiki.return_value.is_existing_page.return_value = False
 
         text_with_table = (
             "=Section=\nSection text\n"
@@ -118,12 +119,25 @@ class TestProjectService(BaseTestCase):
         )
         mocked_table_row.return_value = text_with_table
 
-        page_path = self.document_data["project"]["name"]
-
+        page_title = (
+            f"{self.templates.oeg_page}/Projects/"
+            f"{self.document_data['project']['name'].capitalize()}"
+        )
         ProjectPageService().create_page(self.document_data)
         mocked_mediawiki.return_value.create_page.assert_called_with(
-            token=token, page_title=page_path.capitalize(), page_text=text_with_table
+            token=token, page_title=page_title, page_text=text_with_table
         )
+
+    @patch("server.services.wiki.pages.project_service.MediaWikiService")
+    @patch("server.services.wiki.pages.project_service.WikiTableService.add_table_row")
+    def test_create_page_fails_with_existing_page(
+        self, mocked_table_row, mocked_mediawiki
+    ):
+        token = "token example"
+        mocked_mediawiki.return_value.get_token.return_value = token
+        mocked_mediawiki.return_value.is_existing_page.return_value = True
+        with self.assertRaises(ValueError):
+            ProjectPageService().create_page(self.document_data)
 
     def test_get_project_users(self):
         user_id = 1
@@ -212,7 +226,7 @@ class TestProjectService(BaseTestCase):
         )
         mocked_mediawiki.return_value.edit_page.assert_called_once_with(
             "token example",
-            self.document_data["project"]["name"].capitalize(),
+            f"{self.templates.oeg_page}/Projects/{self.document_data['project']['name'].capitalize()}",
             updated_text,
         )
 
@@ -262,11 +276,13 @@ class TestProjectService(BaseTestCase):
 
         mocked_mediawiki.return_value.move_page.assert_called_once_with(
             token="token example",
-            old_page=current_project_name.capitalize(),
-            new_page=updated_project_name.capitalize(),
+            old_page=f"{self.templates.oeg_page}/Projects/{current_project_name.capitalize()}",
+            new_page=f"{self.templates.oeg_page}/Projects/{updated_project_name.capitalize()}",
         )
         mocked_mediawiki.return_value.edit_page.assert_called_once_with(
-            "token example", updated_project_name.capitalize(), updated_text
+            "token example",
+            f"{self.templates.oeg_page}/Projects/{updated_project_name.capitalize()}",
+            updated_text,
         )
 
     def test_parse_page_to_serializer(self):

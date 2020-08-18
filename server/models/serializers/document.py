@@ -14,7 +14,7 @@ class DocumentSchema(CamelCaseSchema):
 class OrganisationPageSchema(CamelCaseSchema):
     project = ma.List(ma.Nested(ProjectSchema))
     organisation = ma.Nested(OrganisationSchema)
-    platform = ma.Nested(PlatformSchema)
+    platform = ma.List(ma.Nested(PlatformSchema))
 
 
 class OverviewPageSchema(CamelCaseSchema):

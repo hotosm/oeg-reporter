@@ -19,6 +19,13 @@ class MediaWikiService:
     def __init__(self):
         self.endpoint = current_app.config["WIKI_API_ENDPOINT"]
         self.session = requests.Session()
+        self.session.headers.update(
+            {
+                "User-Agent": f"{current_app.config['OEG_REPORTER_BOT_NAME']}/"
+                f"{current_app.config['OEG_REPORTER_VERSION']}"
+                f" ({current_app.config['OEG_REPORTER_CONTACT_INFORMATION']})"
+            }
+        )
         self.login()
 
     def get_page_text(self, page_title: str) -> str:
@@ -36,6 +43,7 @@ class MediaWikiService:
         """
         params = {
             "action": "parse",
+            "maxlag": "5",
             "page": page_title,
             "prop": "wikitext",
             "format": "json",
@@ -63,6 +71,7 @@ class MediaWikiService:
         """
         params = {
             "action": "parse",
+            "maxlag": "5",
             "page": page_title,
             "prop": "wikitext",
             "format": "json",
@@ -92,6 +101,7 @@ class MediaWikiService:
         """
         params = {
             "action": "edit",
+            "maxlag": "5",
             "title": page_title,
             "createonly": "true",
             "contentmodel": "wikitext",
@@ -129,6 +139,7 @@ class MediaWikiService:
         """
         params = {
             "action": "edit",
+            "maxlag": "5",
             "title": page_title,
             "nocreate": "true",
             "contentmodel": "wikitext",
@@ -166,6 +177,7 @@ class MediaWikiService:
         """
         params = {
             "action": "move",
+            "maxlag": "5",
             "from": old_page,
             "to": new_page,
             "movetalk": "true",
@@ -199,7 +211,12 @@ class MediaWikiService:
         data -- Dictionary with result of post request for checking
                 the MediaWiki API Token
         """
-        params = {"action": "checktoken", "type": "csrf", "format": "json"}
+        params = {
+            "action": "checktoken",
+            "maxlag": "5",
+            "type": "csrf",
+            "format": "json",
+        }
         r = self.session.post(url=self.endpoint, params=params, data={"token": token})
         data = r.json()
         if data["checktoken"]["result"] == "invalid":
@@ -217,7 +234,7 @@ class MediaWikiService:
         Returns:
         token -- MediaWiki API Token for an active Session
         """
-        params = {"action": "query", "meta": "tokens", "format": "json"}
+        params = {"action": "query", "maxlag": "5", "meta": "tokens", "format": "json"}
         r = self.session.get(url=self.endpoint, params=params)
         data = r.json()
         token = data["query"]["tokens"]["csrftoken"]
@@ -235,6 +252,7 @@ class MediaWikiService:
         """
         params_token = {
             "action": "query",
+            "maxlag": "5",
             "format": "json",
             "meta": "tokens",
             "type": "login",
@@ -254,6 +272,7 @@ class MediaWikiService:
         login_token = self.generate_login_token()
         params_login = {
             "action": "login",
+            "maxlag": "5",
             "lgname": current_app.config["MEDIAWIKI_BOT_NAME"],
             "format": "json",
         }

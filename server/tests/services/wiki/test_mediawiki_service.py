@@ -18,6 +18,7 @@ class TestMediaWikiService(BaseTestCase):
         page_title = "example page"
         get_page_params = {
             "action": "parse",
+            "maxlag": "5",
             "page": page_title,
             "prop": "wikitext",
             "format": "json",
@@ -53,6 +54,7 @@ class TestMediaWikiService(BaseTestCase):
         page_title = "existing page"
         get_page_params = {
             "action": "parse",
+            "maxlag": "5",
             "page": page_title,
             "prop": "wikitext",
             "format": "json",
@@ -77,6 +79,7 @@ class TestMediaWikiService(BaseTestCase):
         page_title = "existing page"
         get_page_params = {
             "action": "parse",
+            "maxlag": "5",
             "page": page_title,
             "prop": "wikitext",
             "format": "json",
@@ -104,6 +107,7 @@ class TestMediaWikiService(BaseTestCase):
         page_title = "page title example"
         post_page_params = {
             "action": "edit",
+            "maxlag": "5",
             "title": page_title,
             "createonly": "true",
             "contentmodel": "wikitext",
@@ -147,6 +151,7 @@ class TestMediaWikiService(BaseTestCase):
         page_title = "page title example"
         post_page_params = {
             "action": "edit",
+            "maxlag": "5",
             "title": page_title,
             "nocreate": "true",
             "contentmodel": "wikitext",
@@ -191,7 +196,12 @@ class TestMediaWikiService(BaseTestCase):
         token = "token example"
         post_json_data = {"token": token}
 
-        post_page_params = {"action": "checktoken", "type": "csrf", "format": "json"}
+        post_page_params = {
+            "action": "checktoken",
+            "maxlag": "5",
+            "type": "csrf",
+            "format": "json",
+        }
 
         is_valid_token = mediawiki.is_valid_token(token)
         mocked_session.return_value.post.assert_called_with(
@@ -221,7 +231,12 @@ class TestMediaWikiService(BaseTestCase):
     )
     def test_get_token(self, mocked_valid_token, mocked_session):
         mediawiki = MediaWikiService()
-        get_page_params = {"action": "query", "meta": "tokens", "format": "json"}
+        get_page_params = {
+            "action": "query",
+            "maxlag": "5",
+            "meta": "tokens",
+            "format": "json",
+        }
 
         expected_token = "supersecrettoken"
         mocked_session.return_value.get.return_value.json.return_value = {
@@ -246,7 +261,12 @@ class TestMediaWikiService(BaseTestCase):
         self, mocked_valid_token, mocked_session
     ):
         mediawiki = MediaWikiService()
-        get_page_params = {"action": "query", "meta": "tokens", "format": "json"}
+        get_page_params = {
+            "action": "query",
+            "maxlag": "5",
+            "meta": "tokens",
+            "format": "json",
+        }
 
         with self.assertRaises(MediaWikiServiceError):
             mocked_session.return_value.get.return_value.json.return_value = {
@@ -267,6 +287,7 @@ class TestMediaWikiService(BaseTestCase):
         mediawiki = MediaWikiService()
         get_params = {
             "action": "query",
+            "maxlag": "5",
             "format": "json",
             "meta": "tokens",
             "type": "login",
@@ -313,7 +334,12 @@ class TestMediaWikiService(BaseTestCase):
     )
     def test_login(self, mocked_login_token, mocked_session):
         mediawiki = MediaWikiService()
-        post_page_params = {"action": "login", "lgname": "bot name", "format": "json"}
+        post_page_params = {
+            "action": "login",
+            "maxlag": "5",
+            "lgname": "bot name",
+            "format": "json",
+        }
         post_json_data = {"lgpassword": "bot password", "lgtoken": "login token"}
         mediawiki.login()
 
@@ -340,6 +366,7 @@ class TestMediaWikiService(BaseTestCase):
         new_page_title = "new page"
         post_page_params = {
             "action": "move",
+            "maxlag": "5",
             "from": old_page_title,
             "to": new_page_title,
             "movetalk": "true",

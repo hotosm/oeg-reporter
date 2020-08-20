@@ -17,9 +17,12 @@ class TestGitDocumentApi(BaseTestCase):
             f'Document for project {self.document_data["project"]["projectId"]} created'
         )
         self.fail_post_message = (
-            "Unable to write project_1.yaml in /example/path. File already exists"
+            f"Unable to report project {self.document_data['project']['projectId']}. "
+            "Project already reported"
         )
-        self.fail_patch_message = "Unable to open file located in /example/path"
+        self.fail_patch_message = (
+            f"Unable to get content from project {self.document_data['project']['projectId']}"
+        )
         self.success_patch_message = (
             f'Document for project {self.document_data["project"]["projectId"]} updated'
         )
@@ -40,7 +43,7 @@ class TestGitDocumentApi(BaseTestCase):
         response = self.client.post(
             url_for("create_git_document"), json=self.document_data
         )
-        expected = {"Error": self.fail_post_message}
+        expected = {"detail": self.fail_post_message}
         self.assertEqual(expected, response.json)
 
     @patch("server.services.git.file_service.FileService.update_file")
@@ -67,11 +70,11 @@ class TestGitDocumentApi(BaseTestCase):
         expected = {"detail": self.success_patch_message}
         self.assertEqual(expected, response.json)
 
-    @patch("server.services.git.file_service.FileService.get_content")
+    @patch("server.services.git.git_service.FileService.get_content")
     def test_git_document_patch_fail_withot_existing_file(
-        self, mocked_get_content, mocked_repo
+        self, mocked_get_document, mocked_repo
     ):
-        mocked_get_content.side_effect = FileServiceError(self.fail_patch_message)
+        mocked_get_document.side_effect = FileServiceError(self.fail_patch_message)
         response = self.client.patch(
             url_for(
                 "update_git_document",
@@ -81,5 +84,5 @@ class TestGitDocumentApi(BaseTestCase):
             ),
             json={"project": {"name": "project name example"}},
         )
-        expected = {"Error": self.fail_patch_message}
+        expected = {"detail": self.fail_patch_message}
         self.assertEqual(expected, response.json)

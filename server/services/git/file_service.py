@@ -1,4 +1,5 @@
 import os
+import re
 
 from flask import current_app
 
@@ -36,8 +37,9 @@ class FileService:
             f.write(file_content)
             f.close()
         except FileExistsError:
+            project_id = re.search("\d+", filename).group(0)
             raise FileServiceError(
-                f"Unable to write {filename} in {file_dir}. File already exists"
+                f"Unable to report project {project_id}. Project already reported"
             )
 
     @staticmethod
@@ -58,7 +60,10 @@ class FileService:
             f.write(file_content)
             f.close()
         except FileNotFoundError:
-            raise FileServiceError(f"Unable to open {filename} located in {file_dir}")
+            project_id = re.search("\d+", filename).group(0)
+            raise FileServiceError(
+                f"Unable to update project {project_id}. Project not previously reported to git"
+            )
 
     @staticmethod
     def get_content(file_dir):
@@ -80,7 +85,9 @@ class FileService:
             f.close()
             return file_content
         except FileNotFoundError:
-            raise FileServiceError(f"Unable to open file located in {file_dir}")
+            filename = file_dir.split("/")[-1]
+            project_id = re.search("\d+", filename).group(0)
+            raise FileServiceError(f"Unable to get content from project {project_id}")
 
     @staticmethod
     def dict_to_yaml(yaml_dict: dict) -> str:

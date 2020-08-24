@@ -1,6 +1,7 @@
+from marshmallow.exceptions import ValidationError
+
 from server.tests.base_test_config import BaseTestCase
 from server.models.serializers.platform import PlatformSchema, PlatformListSchema
-from marshmallow.exceptions import ValidationError
 
 
 class TestPlatformSchema(BaseTestCase):

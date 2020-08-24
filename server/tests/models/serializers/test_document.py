@@ -1,7 +1,9 @@
+from datetime import datetime
+
+from marshmallow.exceptions import ValidationError
+
 from server.tests.base_test_config import BaseTestCase
 from server.models.serializers.document import DocumentSchema
-from marshmallow.exceptions import ValidationError
-from datetime import datetime
 
 
 class TestDocumentSchema(BaseTestCase):

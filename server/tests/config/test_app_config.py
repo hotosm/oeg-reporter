@@ -1,5 +1,6 @@
-import server
 from flask import Flask
+
+import server
 from server.tests.base_test_config import BaseTestCase
 
 

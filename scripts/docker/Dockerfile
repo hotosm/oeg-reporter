@@ -12,7 +12,11 @@ RUN git clone --depth=1 git://github.com/hotosm/oeg-reporter.git \
 # Install dependencies
 
 FROM python:3.8-buster
+
 ARG GIT_SSH_PRIVATE_KEY
+ARG GIT_USER_NAME
+ARG GIT_USER_EMAIL
+
 RUN pip install --upgrade pip
 
 RUN mkdir -p /usr/src/app
@@ -25,6 +29,10 @@ RUN mkdir -p /root/.ssh
 RUN echo "$GIT_SSH_PRIVATE_KEY" > /root/.ssh/id_rsa
 RUN chmod 700 /root/.ssh/id_rsa &&\
 	ssh-keyscan github.com >> /root/.ssh/known_hosts
+
+# Git user Configuration
+RUN git config --global user.name "$GIT_USER_NAME" &&\
+	git config --global user.email ${GIT_USER_EMAIL}
 
 ## SETUP
 # Setup backend dependencies

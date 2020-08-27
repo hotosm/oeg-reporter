@@ -32,7 +32,7 @@ It's also a good practice to set an user agent in the mediawiki API requests hea
 
 #### Configuring Environment variables
 
-For get everything working properly with the API you need to update the `.env` configuration file with the mediawiki information collected during the previous steps:
+For get everything working properly with the API you need to update the `.env` configuration file with the mediawiki information collected during the previous steps, if using docker set to https://mediawiki/api.php:
 - `MEDIAWIKI_BOT_NAME`=bot_name
 - `MEDIAWIKI_BOT_PASSWORD`=bot_password
 - `WIKI_API_ENDPOINT`=https://127.0.0.1:8080/api.php

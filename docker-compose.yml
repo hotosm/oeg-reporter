@@ -7,6 +7,8 @@ services:
         context: "./scripts/docker"
         args:
           GIT_SSH_PRIVATE_KEY: ${GIT_SSH_PRIVATE_KEY}
+          GIT_USER_NAME: ${GIT_USER_NAME}
+          GIT_USER_EMAIL: ${GIT_USER_EMAIL}
       ports:
         - 5001:5001
       volumes:

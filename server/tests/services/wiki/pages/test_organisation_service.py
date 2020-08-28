@@ -206,42 +206,42 @@ class TestOrganisationService(BaseTestCase):
             updated_text,
         )
 
-        @patch("server.services.wiki.pages.organisation_service." "MediaWikiService")
-        @patch(
-            "server.services.wiki.pages.organisation_service."
-            "OrganisationPageService.get_edit_page_text"
+    @patch("server.services.wiki.pages.organisation_service." "MediaWikiService")
+    @patch(
+        "server.services.wiki.pages.organisation_service."
+        "OrganisationPageService.get_edit_page_text"
+    )
+    def test_edit_page_move_organisation_page(
+        self, mocked_edited_page_text, mocked_mediawiki
+    ):
+        updated_organisation_name = "updated organisation name"
+        update_fields = {"organisation": {"name": updated_organisation_name}}
+        updated_organisation_page_data = {
+            "organisation": {"name": updated_organisation_name}
+        }
+        current_organisation_name = "organisation name"
+        current_organisation_page_data = {
+            "organisation": {"name": current_organisation_name}
+        }
+
+        mocked_mediawiki.return_value.get_token.return_value = "token example"
+
+        updated_text = "Updated text"
+        mocked_edited_page_text.return_value = updated_text
+
+        OrganisationPageService().edit_page(
+            updated_organisation_page_data,
+            update_fields,
+            current_organisation_page_data,
         )
-        def test_edit_page_move_organisation_page(
-            self, mocked_edited_page_text, mocked_mediawiki
-        ):
-            updated_organisation_name = "updated organisation name"
-            update_fields = {"organisation": {"name": updated_organisation_name}}
-            updated_organisation_page_data = {
-                "organisation": {"name": updated_organisation_name}
-            }
-            current_organisation_name = "organisation name"
-            current_organisation_page_data = {
-                "organisation": {"name": current_organisation_name}
-            }
 
-            mocked_mediawiki.return_value.get_token.return_value = "token example"
-
-            updated_text = "Updated text"
-            mocked_edited_page_text.return_value = updated_text
-
-            OrganisationPageService().edit_page(
-                updated_organisation_page_data,
-                update_fields,
-                current_organisation_page_data,
-            )
-
-            mocked_mediawiki.return_value.move_page.assert_called_once_with(
-                token="token example",
-                old_page=f"{self.templates.oeg_page}/{current_organisation_name.capitalize()}",
-                new_page=f"{self.templates.oeg_page}/{updated_organisation_name.capitalize()}",
-            )
-            mocked_mediawiki.return_value.edit_page.assert_called_once_with(
-                "token example",
-                f"{self.templates.oeg_page}/{updated_organisation_name.capitalize()}",
-                updated_text,
-            )
+        mocked_mediawiki.return_value.move_page.assert_called_once_with(
+            token="token example",
+            old_page=f"{self.templates.oeg_page}/{current_organisation_name.capitalize()}",
+            new_page=f"{self.templates.oeg_page}/{updated_organisation_name.capitalize()}",
+        )
+        mocked_mediawiki.return_value.edit_page.assert_called_once_with(
+            "token example",
+            f"{self.templates.oeg_page}/{updated_organisation_name.capitalize()}",
+            updated_text,
+        )

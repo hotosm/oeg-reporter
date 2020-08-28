@@ -22,11 +22,17 @@ class TestWikiDocumentApi(BaseTestCase):
     @patch("server.api.wiki.resources.ProjectPageService")
     @patch("server.api.wiki.resources.OrganisationPageService")
     @patch("server.api.wiki.resources.OverviewPageService")
+    @patch.dict(
+        "server.services.utils.current_app.config",
+        {"AUTHORIZATION_TOKEN": "secrettokenexample"},
+    )
     def test_wiki_document_post(
         self, mocked_overview_page, mocked_organisation_page, mocked_project_page
     ):
         response = self.client.post(
-            url_for("create_wiki_document"), json=self.document_data
+            url_for("create_wiki_document"),
+            json=self.document_data,
+            headers={"Authorization": "Token secrettokenexample"},
         )
         expected = {"detail": self.success_post_message}
         self.assertEqual(expected, response.json)
@@ -44,17 +50,27 @@ class TestWikiDocumentApi(BaseTestCase):
     @patch("server.api.wiki.resources.ProjectPageService")
     @patch("server.api.wiki.resources.OrganisationPageService")
     @patch("server.api.wiki.resources.OverviewPageService")
+    @patch.dict(
+        "server.services.utils.current_app.config",
+        {"AUTHORIZATION_TOKEN": "secrettokenexample"},
+    )
     def test_wiki_document_post_fail_with_existing_page(
         self, mocked_overview_page, mocked_organisation_page, mocked_project_page
     ):
         mocked_overview_page.side_effect = MediaWikiServiceError(self.fail_post_message)
         response = self.client.post(
-            url_for("create_wiki_document"), json=self.document_data
+            url_for("create_wiki_document"),
+            json=self.document_data,
+            headers={"Authorization": "Token secrettokenexample"},
         )
         expected = {"detail": self.fail_post_message}
         self.assertEqual(expected, response.json)
 
     @patch("server.services.wiki.pages.utils.generate_document_data_from_wiki_pages")
+    @patch.dict(
+        "server.services.utils.current_app.config",
+        {"AUTHORIZATION_TOKEN": "secrettokenexample"},
+    )
     def test_wiki_document_patch_fails_with_invalid_project(
         self, mocked_generate_document_data
     ):
@@ -91,11 +107,16 @@ class TestWikiDocumentApi(BaseTestCase):
                     project_name=self.document_data["project"]["name"],
                 ),
                 json=self.document_data,
+                headers={"Authorization": "Token secrettokenexample"},
             )
             expected = {"detail": error_message}
             self.assertEqual(expected, response.json)
 
     @patch("server.api.wiki.resources.generate_document_data_from_wiki_pages")
+    @patch.dict(
+        "server.services.utils.current_app.config",
+        {"AUTHORIZATION_TOKEN": "secrettokenexample"},
+    )
     def test_wiki_document_patch_fails(self, mocked_generate_document_data):
         with patch(
             "server.api.wiki.resources.OverviewPageService.edit_page"
@@ -117,6 +138,7 @@ class TestWikiDocumentApi(BaseTestCase):
                     project_name=self.document_data["project"]["name"],
                 ),
                 json=self.document_data,
+                headers={"Authorization": "Token secrettokenexample"},
             )
             mocked_overview_page.assert_called_with(
                 updated_document, self.document_data, current_document
@@ -130,6 +152,10 @@ class TestWikiDocumentApi(BaseTestCase):
 
     @patch("server.services.wiki.pages.overview_service.MediaWikiService")
     @patch("server.api.wiki.resources.generate_document_data_from_wiki_pages")
+    @patch.dict(
+        "server.services.utils.current_app.config",
+        {"AUTHORIZATION_TOKEN": "secrettokenexample"},
+    )
     def test_wiki_document_patch_fails_with_invalid_mediawiki_token(
         self, mocked_generate_document_data, mocked_mediawiki
     ):
@@ -147,6 +173,7 @@ class TestWikiDocumentApi(BaseTestCase):
                 project_name=self.document_data["project"]["name"],
             ),
             json=self.document_data,
+            headers={"Authorization": "Token secrettokenexample"},
         )
         expected_response = {"detail": "Invalid token"}
         self.assertEqual(expected_response, response.json)

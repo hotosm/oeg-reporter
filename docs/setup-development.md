@@ -5,7 +5,7 @@
 
 * Copy the example configuration file to start your own configuration: `cp example.env .env`.
 * Adjust the `.env` configuration file to fit your configuration.
-* Make sure that you followed the setup for the [git repository configuration](/docs/git-repository-setup.md) and the [media wiki configuration](/docs/mediawiki-instance-setup.md) for properly set the variables in the `.env` configuration file: 
+* Make sure that you followed the setup for the [git repository configuration](/docs/git-repository-setup.md) and the [media wiki configuration](/docs/mediawiki-instance-setup.md) for properly set the variables in the `.env` configuration file. Also, it is necessary to configure the `AUTHORIZATION_TOKEN` environment variable that is used in the requests authorization: 
     - `MEDIAWIKI_BOT_NAME`=bot_name
     - `MEDIAWIKI_BOT_PASSWORD`=bot_password
     - `WIKI_API_ENDPOINT`=https://your-wiki.org/api.php
@@ -17,6 +17,7 @@
     - `GIT_SSH_PRIVATE_KEY`="your_private_key"
     - `GIT_USER_NAME`=git_user_name
     - `GIT_USER_EMAIL`=git_user_email
+    - `AUTHORIZATION_TOKEN`=supersecrettoken
 
 #### Build
 

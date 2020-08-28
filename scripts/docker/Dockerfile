@@ -40,4 +40,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # INITIALIZATION
 EXPOSE 5001
-CMD ["python", "manage.py", "runserver", "--port", "5001", "-h", "0.0.0.0"]
+CMD ["python", "manage.py", "runserver", "--port", "5001", "-d", "-h", "0.0.0.0"]

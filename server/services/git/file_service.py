@@ -37,7 +37,7 @@ class FileService:
             f.write(file_content)
             f.close()
         except FileExistsError:
-            project_id = re.search("\d+", filename).group(0)
+            project_id = re.search(r"\d+", filename).group(0)
             raise FileServiceError(
                 f"Unable to report project {project_id}. Project already reported"
             )
@@ -60,7 +60,7 @@ class FileService:
             f.write(file_content)
             f.close()
         except FileNotFoundError:
-            project_id = re.search("\d+", filename).group(0)
+            project_id = re.search(r"\d+", filename).group(0)
             raise FileServiceError(
                 f"Unable to update project {project_id}. Project not previously reported to git"
             )
@@ -86,7 +86,7 @@ class FileService:
             return file_content
         except FileNotFoundError:
             filename = file_dir.split("/")[-1]
-            project_id = re.search("\d+", filename).group(0)
+            project_id = re.search(r"\d+", filename).group(0)
             raise FileServiceError(f"Unable to get content from project {project_id}")
 
     @staticmethod

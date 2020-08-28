@@ -4,9 +4,11 @@ from flask import request
 from server.services.git.git_service import GitService
 from server.models.serializers.document import DocumentSchema
 from server.services.git.file_service import FileServiceError
+from server.services.utils import check_token
 
 
 class GitDocumentApi(MethodView):
+    @check_token
     def post(self):
         try:
             document_schema = DocumentSchema()
@@ -22,6 +24,7 @@ class GitDocumentApi(MethodView):
         except FileServiceError as e:
             return {"detail": f"{str(e)}"}, 409
 
+    @check_token
     def patch(self, platform_name: str, organisation_name: str, project_id: int):
         try:
             document_schema = DocumentSchema(partial=True)

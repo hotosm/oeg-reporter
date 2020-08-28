@@ -4,7 +4,7 @@
 
 #### Add repository to local environment
 For report data to a git repository it is necessary to have the repository cloned locally. For this you need to run the following commands:
-- Add the submodule with the command `git submodule add git@github.com:hotosm/oeg-reporter.git folder_name/` 
+- Add the submodule with the command `git submodule add git@github.com:hotosm/repo-for-storing-reported-files.git folder_name/` 
 
 **Important:** The repository clone URL __must__ use SSH password instead HTTPS, otherwise the API will wait for an input for the git username and password. For this you need to add a SSH key to your hosting service for Git repositories. 
 

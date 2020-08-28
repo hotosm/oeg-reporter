@@ -2,6 +2,8 @@ from flask.views import MethodView
 from flask import request
 from flask import current_app
 
+from marshmallow.exceptions import ValidationError
+
 from server.services.wiki.mediawiki_service import MediaWikiServiceError
 from server.services.wiki.pages.organisation_service import OrganisationPageService
 from server.services.wiki.pages.project_service import ProjectPageService
@@ -37,6 +39,8 @@ class WikiDocumentApi(MethodView):
             return {"detail": f"{str(e)}"}, 400
         except ConnectionError:
             return {"detail": "Error in connection with Mediawiki"}, 500
+        except ValidationError as e:
+            return {"detail": f"{str(e)}"}, 400
         except Exception as e:
             error_msg = f"Wiki POST - unhandled error: {str(e)}"
             current_app.logger.error(error_msg)
@@ -58,6 +62,8 @@ class WikiDocumentApi(MethodView):
             return {"detail": f"{str(e)}"}, 409
         except ValueError as e:
             current_app.logger.error(str(e))
+            return {"detail": f"{str(e)}"}, 400
+        except ValidationError as e:
             return {"detail": f"{str(e)}"}, 400
         except ConnectionError:
             return {"detail": "Error in connection with Mediawiki"}, 500

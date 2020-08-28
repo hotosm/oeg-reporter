@@ -5,7 +5,7 @@
 
 * Copy the example configuration file to start your own configuration: `cp example.env .env`.
 * Adjust the `.env` configuration file to fit your configuration.
-* Make sure that you followed the setup for the [git repository configuration](/docs/git-repository-setup.md) and the [media wiki configuration](/docs/mediawiki-instance-setup.md) for properly set the variables in the `.env` configuration file. Also, it is necessary to configure the `AUTHORIZATION_TOKEN` environment variable that is used in the requests authorization: 
+* Make sure that you followed the setup for the [git repository configuration](/docs/git-repository-setup.md) and the [MediaWiki configuration](/docs/mediawiki-instance-setup.md) for properly set the variables in the `.env` configuration file. Also, it is necessary to configure the `AUTHORIZATION_TOKEN` environment variable that is used in the requests authorization:
     - `MEDIAWIKI_BOT_NAME`=bot_name
     - `MEDIAWIKI_BOT_PASSWORD`=bot_password
     - `WIKI_API_ENDPOINT`=https://your-wiki.org/api.php
@@ -18,6 +18,11 @@
     - `GIT_USER_NAME`=git_user_name
     - `GIT_USER_EMAIL`=git_user_email
     - `AUTHORIZATION_TOKEN`=supersecrettoken
+* After set all this variables you have everything ready to report data for both a git repository and a MediaWiki instance. If you just want to have a local MediaWiki instance running without the configuration for bots that are used for report data, the only environment variables required are the following ones: **Important**: *If using just the following environment variables the report won't work because there's no bot configuration, this is just an example in case you want to have a local Mediawiki instance*.
+    - `MYSQL_DATABASE`=my_wiki
+    - `MYSQL_USER`=wikiuser
+    - `MYSQL_PASSWORD`=example
+    - `MYSQL_RANDOM_ROOT_PASSWORD`='yes'
 
 #### Build
 

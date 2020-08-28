@@ -11,7 +11,7 @@ RUN git clone --depth=1 git://github.com/hotosm/oeg-reporter.git \
 # INSTALLATION
 # Install dependencies
 
-FROM python:3.8-buster
+FROM python:3.7-buster
 
 ARG GIT_SSH_PRIVATE_KEY
 ARG GIT_USER_NAME

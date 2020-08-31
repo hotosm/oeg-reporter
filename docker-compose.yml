@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+    backend:
+      env_file: .env
+      build:
+        context: "./scripts/docker"
+        args:
+          GIT_SSH_PRIVATE_KEY: ${GIT_SSH_PRIVATE_KEY}
+          GIT_USER_NAME: ${GIT_USER_NAME}
+          GIT_USER_EMAIL: ${GIT_USER_EMAIL}
+      ports:
+        - 5001:5001
+      volumes:
+        - .:/usr/src/app
+      networks:
+        - oeg-reporter
+    mediawiki:
+      image: mediawiki
+      restart: always
+      ports:
+        - 8080:80
+      links:
+        - database
+      volumes:
+        - /var/www/html/images
+        # After initial setup, download LocalSettings.php to the same directory as
+        # this yaml and uncomment the following line and use compose to restart
+        # the mediawiki service
+        # - ./LocalSettings.php:/var/www/html/LocalSettings.php
+      networks:
+        - oeg-reporter
+
+    database:
+      image: mariadb
+      restart: always
+      env_file: .env
+      ports:
+          - 3306:3306
+      networks:
+        - oeg-reporter
+
+networks:
+  oeg-reporter:
+    external: true
+          

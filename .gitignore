@@ -141,3 +141,6 @@ dmypy.json
 
 # Folder of git repo
 report_files_repository/
+
+# Wiki configuration file
+LocalSettings.php

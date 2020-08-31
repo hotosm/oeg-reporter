@@ -20,15 +20,19 @@ Once you finish the configuration you'll be prompt to download a file named `Loc
     - `# - ./LocalSettings.php:/var/www/html/LocalSettings.php`
 * And rebuild the docker container with the newly configured mediawiki instance with the following commands:
     - docker-compose stop mediawiki
-    - docker-compose up --build mediawiki
+    - docker-compose up --build -d mediawiki
 
 ### Creating a bot
 
 For creating a bot visit your browser at `http://127.0.0.1:8080/index.php/Special:BotPasswords` and login with the root user created during the mediawiki configuration. Finally, you just have to create your bot with the name you want and it will generate a password for it.
+It's also a good practice to set an user agent in the mediawiki API requests header when working with bots as described in this [page of the documentation for creating a bot](https://www.mediawiki.org/wiki/Manual:Creating_a_bot#Bot_best_practices). For customize the request user agent header in your development instance update the `.env` configuration file with the following parameters:
+- `OEG_REPORTER_BOT_NAME`=OegReporterBot
+- `OEG_REPORTER_VERSION`=0.1
+- `OEG_REPORTER_CONTACT_INFORMATION`=systemadministrator@example.com
 
 #### Configuring Environment variables
 
-For get everything working properly with the API you need to update the `.env` configuration file with the mediawiki information collected during the previous steps:
+For get everything working properly with the API you need to update the `.env` configuration file with the mediawiki information collected during the previous steps, if using docker set to https://mediawiki/api.php:
 - `MEDIAWIKI_BOT_NAME`=bot_name
 - `MEDIAWIKI_BOT_PASSWORD`=bot_password
 - `WIKI_API_ENDPOINT`=https://127.0.0.1:8080/api.php

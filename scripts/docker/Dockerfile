@@ -4,7 +4,7 @@ FROM alpine/git as base
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-ARG branch=feature/add-wiki-report
+ARG branch=master
 RUN git clone --depth=1 git://github.com/hotosm/oeg-reporter.git \
 	--branch $branch /usr/src/app
 

@@ -26,7 +26,7 @@ class GitDocumentApi(MethodView):
         except FileServiceError as e:
             return {"detail": f"{str(e)}"}, 409
         except ValidationError as e:
-            return {"detail": f"{str(e)}"}, 400
+            return {"detail": f"Error validating report data {str(e)}"}, 400
 
     @check_token
     def patch(self, platform_name: str, organisation_name: str, project_id: int):
@@ -39,4 +39,4 @@ class GitDocumentApi(MethodView):
         except FileServiceError as e:
             return {"detail": f"{str(e)}"}, 409
         except ValidationError as e:
-            return {"detail": f"{str(e)}"}, 400
+            return {"detail": f"Error validating report data {str(e)}"}, 400

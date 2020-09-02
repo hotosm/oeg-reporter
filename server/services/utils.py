@@ -34,8 +34,11 @@ def check_token(f):
     def decorated(*args, **kwargs):
         if "Authorization" in request.headers.keys():
             token_header = request.headers["Authorization"]
-            auth_token = token_header.split(maxsplit=1)[1]
-            if auth_token != current_app.config["AUTHORIZATION_TOKEN"]:
+            try:
+                auth_token = token_header.split(maxsplit=1)[1]
+                if auth_token != current_app.config["AUTHORIZATION_TOKEN"]:
+                    return make_response({"detail": "Invalid authorization token"}, 401)
+            except IndexError:
                 return make_response({"detail": "Invalid authorization token"}, 401)
         else:
             return make_response({"detail": "Authorization token not present"}, 401)

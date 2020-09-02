@@ -38,10 +38,12 @@
     * ```py
       python runserver -d
       ```
+* After this you are able to report data to a mediawiki instance and to a git repository. Which is described with more details in the [Reporting data section](####reporting-data)
 
 ##### Build with docker
 
 * To have your local environment working using docker it's required that you have [Docker](https://docs.docker.com/get-started/) and [Docker Compose](https://docs.docker.com/compose/) to be installed in your computer. Afterwards you'll just need:
+    * In case this is the first time you are running this setup, it is necessary to create a network for the docker containers with the command: `docker network create oeg-reporter`.
     * One command to get everything together and start the OEG Reporter: `docker-compose up -d backend`
     * After this you are able to report data to a mediawiki instance and to a git repository. Which is described with more details in the [Reporting data section](####reporting-data)
 
@@ -60,7 +62,8 @@
 
 ##### Report to a mediawiki instance
 
-* To add new data to a mediawiki instance, you can send a `POST` request in the endpoint `/wiki/` with a JSON in the following format:
+* To add new data to a mediawiki instance, you can send a `POST` request in the endpoint `/wiki/` using `curl` through your terminal, or any other tool for testing APIs with the json following JSON fields:<br>
+**Important:** Add the `Content-Type: application/json` and `Authorization: Token <secret defined in the .env config file>` headers to your request, without this the request is going to fail.
 
 ```json
 {
@@ -105,7 +108,8 @@
     - Project page - `http://localhost:8080/index.php/Organised_Editing/Activities/Auto_report/Projects/Project_name`
 
 * To update data in the mediawiki instance, you need to send a `PATCH` request in the `/wiki/<organisation_name>/<project_name>` endpoint with the same JSON fields. **Important**: It's not required to send all fields in the JSON because all of them are optional.
-* For example, to update some data from the project `Project name` from the organisation `Organisation name` the `PATCH` request will be `http://localhost:5001/wiki/organisation name/project name/` and the JSON data *must* contain at least one field of the shown in the `POST` request previously. In this example the project will have its license and status updated:
+* For example, to update some data from the project `Project name` from the organisation `Organisation name` the `PATCH` request will be `http://localhost:5001/wiki/organisation name/project name/` and the JSON data *must* contain at least one field of the shown in the `POST` request previously. In this example the project will have its license and status updated:<br>
+**Important:** Add the `Content-Type: application/json` and `Authorization: Token <secret defined in the .env config file>` headers to your request, without this the request is going to fail.
 ```json
 {
     "project":{
@@ -118,8 +122,8 @@
 
 ##### Report to a git repository
 
-* To add new data to a git repository, you can send a `POST` request in the endpoint `/git/` with a JSON in the following format:
-
+* To add new data to a git repository, you can send a `POST` request in the endpoint `/git/` using `curl` through your terminal, or any other tool for testing APIs with the json following JSON fields:<br>
+**Important:** Add the `Content-Type: application/json` and `Authorization: Token <secret defined in the .env config file>` headers to your request, without this the request is going to fail.
 ```json
 {
     "project":{
@@ -160,7 +164,8 @@
 * If everything worked it should create a file in the git repository cloned in your local computer as described in the [git repository setup](/docs/git-repository-setup.md), commit and push it to the remote repository. The project is reported following this predefined folder structure `github_files/<platform_name>/<organisation_name>`, in this case the structure of the reported project data would be `github_files/Platform_example/organisation_name/project_1.yaml`.
 
 * To update data in the mediawiki instance, you need to send a `PATCH` request in the `/git/<platform_name>/<organisation_name>/<project_id>` endpoint with the same JSON fields. **Important**: It's not required to send all fields in the JSON because all of them are optional.
-* For example, to update some data from the project `Project name` from the organisation `Organisation name` the `PATCH` request will be `http://localhost:5001/git/Platform example/organisation name/1/` and the JSON data *must* contain at least one field of the shown in the `POST` request previously. In this example the project will have its license and short description updated:
+* For example, to update some data from the project `Project name` from the organisation `Organisation name` the `PATCH` request will be `http://localhost:5001/git/Platform example/organisation name/1/` and the JSON data *must* contain at least one field of the shown in the `POST` request previously. In this example the project will have its license and short description updated:<br>
+**Important:** Add the `Content-Type: application/json` and `Authorization: Token <secret defined in the .env config file>` headers to your request, without this the request is going to fail.
 ```json
 {
     "project":{

@@ -26,7 +26,7 @@ pycodestyle==2.6.0
 pyflakes==2.2.0
 pyrsistent==0.16.0
 python-dotenv==0.14.0
-PyYAML==5.3.1
+PyYAML==5.4
 regex==2020.7.14
 requests==2.24.0
 six==1.15.0
